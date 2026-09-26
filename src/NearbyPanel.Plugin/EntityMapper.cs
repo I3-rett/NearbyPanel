@@ -1,0 +1,90 @@
+using NearbyPanel.Core;
+using UnityEngine;
+
+namespace NearbyPanel;
+
+/// <summary>
+/// The boundary between the game and <see cref="NearbyPanel.Core"/>. Everything
+/// that knows about Valheim types stops here; everything past it works on
+/// <see cref="NearbyEntity"/>. See docs/adr/0004-core-plugin-split.md.
+/// </summary>
+internal static class EntityMapper
+{
+    public static Vec3 ToVec3(Vector3 value) => new(value.x, value.y, value.z);
+
+    /// <summary>
+    /// Describes <paramref name="character"/> as a row, or returns null when it
+    /// should not be listed at all.
+    /// </summary>
+    public static NearbyEntity? FromCharacter(Character character)
+    {
+        if (character == null || character.IsDead())
+        {
+            return null;
+        }
+
+        if (character == Player.m_localPlayer)
+        {
+            return null;
+        }
+
+        Tameable tameable = character.GetComponent<Tameable>();
+
+        EntityKind kind = character.IsPlayer()
+            ? EntityKind.Player
+            : tameable != null ? EntityKind.Tameable : EntityKind.Creature;
+
+        return new NearbyEntity(
+            Name: Localize(character.GetHoverName()),
+            Kind: kind,
+            Position: ToVec3(character.GetCenterPoint()),
+            Level: character.GetLevel(),
+            Status: tameable != null ? Localize(tameable.GetStatusString()) : null,
+            TamingProgress: TamingProgress(tameable));
+    }
+
+    /// <summary>
+    /// How far along taming is, 0..1, or null when there is nothing to report —
+    /// already tamed, not tameable, or the record is not readable yet.
+    ///
+    /// Read from the ZDO rather than the component, because the value is only
+    /// written by whichever peer owns the creature. Reading the ZDO is what lets
+    /// this work for an animal a friend is taming. The owner writes once every
+    /// three seconds, so the figure advances in steps.
+    /// </summary>
+    private static float? TamingProgress(Tameable? tameable)
+    {
+        if (tameable == null || tameable.IsTamed())
+        {
+            return null;
+        }
+
+        // m_tamingTime is serialized per prefab, so it must be read off the live
+        // component and never hardcoded.
+        float total = tameable.m_tamingTime;
+        if (total <= 0f)
+        {
+            return null;
+        }
+
+        ZNetView view = tameable.GetComponent<ZNetView>();
+        if (view == null || !view.IsValid())
+        {
+            return null;
+        }
+
+        ZDO zdo = view.GetZDO();
+        if (zdo == null)
+        {
+            return null;
+        }
+
+        // Defaulting to the full duration means "no key written yet" reads as 0%,
+        // which is what the game itself does.
+        float remaining = zdo.GetFloat(ZDOVars.s_tameTimeLeft, total);
+        return 1f - Mathf.Clamp01(remaining / total);
+    }
+
+    private static string Localize(string token) =>
+        Localization.instance != null ? Localization.instance.Localize(token) : token;
+}

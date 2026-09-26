@@ -23,17 +23,39 @@ namespace NearbyPanel.Tests;
 /// </summary>
 internal static class GameAssembly
 {
-    private static readonly Lazy<AssemblyDefinition?> Loaded = new(Load);
+    /// <summary>
+    /// The assemblies the plugin references. Localization is in assembly_guiutils
+    /// rather than assembly_valheim, which is exactly the kind of thing worth
+    /// having a test remember.
+    /// </summary>
+    private static readonly string[] FileNames =
+    {
+        "assembly_valheim.dll",
+        "assembly_guiutils.dll",
+    };
 
-    public static bool IsAvailable => Loaded.Value != null;
+    private static readonly Lazy<List<AssemblyDefinition>> Loaded = new(Load);
+
+    public static bool IsAvailable => Loaded.Value.Count > 0;
 
     public static TypeDefinition Type(string name)
     {
-        AssemblyDefinition assembly = Loaded.Value
-            ?? throw new InvalidOperationException("Game assembly not available; guard with IsAvailable.");
+        if (!IsAvailable)
+        {
+            throw new InvalidOperationException("Game assemblies not available; guard with IsAvailable.");
+        }
 
-        return assembly.MainModule.Types.FirstOrDefault(t => t.Name == name)
-            ?? throw new InvalidOperationException($"Type '{name}' no longer exists in assembly_valheim.");
+        foreach (AssemblyDefinition assembly in Loaded.Value)
+        {
+            TypeDefinition? found = assembly.MainModule.Types.FirstOrDefault(t => t.Name == name);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Type '{name}' no longer exists in {string.Join(" or ", FileNames)}.");
     }
 
     /// <summary>The named method, matched on parameter type names when given.</summary>
@@ -73,18 +95,21 @@ internal static class GameAssembly
     private static string Describe(MethodDefinition method) =>
         $"{method.Name}({string.Join(", ", method.Parameters.Select(p => p.ParameterType.Name))})";
 
-    private static AssemblyDefinition? Load()
+    private static List<AssemblyDefinition> Load()
     {
         foreach (string directory in CandidateDirectories())
         {
-            string path = Path.Combine(directory, "assembly_valheim.dll");
-            if (File.Exists(path))
+            if (!FileNames.All(name => File.Exists(Path.Combine(directory, name))))
             {
-                return AssemblyDefinition.ReadAssembly(path);
+                continue;
             }
+
+            return FileNames
+                .Select(name => AssemblyDefinition.ReadAssembly(Path.Combine(directory, name)))
+                .ToList();
         }
 
-        return null;
+        return new List<AssemblyDefinition>();
     }
 
     private static IEnumerable<string> CandidateDirectories()

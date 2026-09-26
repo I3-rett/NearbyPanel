@@ -16,6 +16,8 @@ public sealed class Plugin : BaseUnityPlugin
 
     internal static ConfigEntry<bool> Enabled = null!;
 
+    private readonly EntityScanner _scanner = new();
+
     private void Awake()
     {
         Log = Logger;
@@ -25,6 +27,10 @@ public sealed class Plugin : BaseUnityPlugin
             "Enabled",
             true,
             "Master switch. Turning this off hides the panel and stops the scan.");
+
+        // Constructing the command registers it with the terminal, which keeps its
+        // own static table, so this is safe to do before any world is loaded.
+        DumpCommand.Register(_scanner);
 
         Log.LogInfo(PluginInfo.Name + " " + PluginInfo.Version + " loaded (client-side only).");
     }

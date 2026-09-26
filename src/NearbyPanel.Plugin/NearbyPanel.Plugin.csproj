@@ -52,6 +52,11 @@
       <HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
+    <!-- Localization lives here, not in assembly_valheim. -->
+    <Reference Include="assembly_guiutils">
+      <HintPath>$(ValheimManaged)\assembly_guiutils.dll</HintPath>
+      <Private>False</Private><SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(ValheimManaged)\UnityEngine.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
