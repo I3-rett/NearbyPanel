@@ -100,14 +100,19 @@ public class ConsoleApiGuardTests
     }
 
     [Fact]
-    public void ZNetView_exposes_IsValid_and_GetZDO()
+    public void Localization_instance_is_a_public_static_property()
     {
+        // Guarding Localize without the singleton that reaches it covers the half
+        // less likely to change.
         if (!GameAssembly.IsAvailable)
         {
             return;
         }
 
-        Assert.True(GameAssembly.Method("ZNetView", "IsValid").IsPublic);
-        Assert.True(GameAssembly.Method("ZNetView", "GetZDO").IsPublic);
+        MethodDefinition getter = GameAssembly.Method("Localization", "get_instance");
+
+        Assert.True(getter.IsPublic);
+        Assert.True(getter.IsStatic);
+        Assert.Equal("Localization", getter.ReturnType.Name);
     }
 }

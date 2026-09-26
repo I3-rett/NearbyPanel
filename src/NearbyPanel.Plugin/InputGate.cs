@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace NearbyPanel;
 
 /// <summary>
@@ -32,6 +34,14 @@ internal static class InputGate
         }
 
         if (Menu.IsVisible() || InventoryGui.IsVisible())
+        {
+            return false;
+        }
+
+        // Any IMGUI text field anywhere has keyboard focus — most usefully the
+        // search box of an in-game configuration manager, which is IMGUI and which
+        // none of the checks above can see.
+        if (GUIUtility.keyboardControl != 0)
         {
             return false;
         }

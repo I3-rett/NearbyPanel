@@ -1,21 +1,23 @@
 # Changelog
 
-## 0.2.0 — unreleased, not yet tested in game
+## 0.2.0 — unreleased, never run in game
 
-First working version. Everything below builds with no warnings and is covered by
-95 automated tests, but none of it has been seen running yet.
+First complete version. It builds with no warnings and 111 automated tests pass, but the
+mod has not been loaded in game once. The panel, the console command and the hotkey gating
+have **no** automated coverage — they live in the plugin assembly, which cannot be unit
+tested — so treat this as unverified.
 
 - Panel listing tameable creatures within 50 m, toggled with **N**
-- Per row: name, distance, compass direction, altitude, level, and for an animal being
-  tamed, the percentage and the game's own status wording
-- Taming progress read from the network record, so an animal a friend is taming reports
-  too; smoothed between the owner's three-second writes, and held while the animal is
-  hungry or frightened
-- `nearby_dump` console command, `nearby_dump all` to list every creature
+- Per row: name, ground distance, heading relative to where you face, altitude, star
+  rating, and for an animal being tamed, the percentage and the game's own status wording
+- Taming progress read from the network record, so an animal a friend is taming reports too
+- Your own tamed animals appear in the list, by their given name
+- `nearby_dump` console command, writing the same rows to the log
 - Panel is read-only: it takes no click and never touches the cursor
 - Hotkey ignored while typing in chat, the console, a rename box, a menu, the inventory,
-  or while placing a building piece
+  any IMGUI text field, or while placing a building piece
 - Nothing is scanned while the panel is closed
+- A creature that cannot be read is skipped rather than taking the panel down
 
 ## 0.1.0
 

@@ -26,7 +26,10 @@ else.
 
 ## Consequences
 
-- Roughly 60% of the code is under `dotnet test`. Without the split it would be 0%.
+- About 40% of the shipped code is under `dotnet test` (Core is ~260 of ~660 non-comment
+  lines). Without the split it would be 0%, which is the point — but the honest figure is
+  40%, not the 60% this ADR originally claimed. Some of the remainder is decisions rather
+  than glue and could still move across; see the contributing notes.
 - The netstandard2.0 target enforces the rule mechanically: a stray `using UnityEngine`
   in Core will not compile, so the discipline cannot erode quietly.
 - Records need an `IsExternalInit` polyfill on netstandard2.0. One file, `Polyfills.cs`.

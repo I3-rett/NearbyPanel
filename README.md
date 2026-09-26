@@ -1,11 +1,11 @@
 # NearbyPanel
 
 A client-side Valheim mod that lists the creatures near you — nearest first, with
-distance, direction, altitude, level and status, including live taming progress.
+distance, direction, altitude, star rating and status, including live taming progress.
 
-Status: **early development.** The project builds, the test suite is green and the plugin
-loads in game, but the panel itself is not implemented yet. See
-[`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for where it stands.
+Status: **written, never run.** The solution builds, 111 tests pass and the package
+zips cleanly, but the mod has not yet been loaded in game a single time. Treat every
+claim below as "the code says so", not "I watched it work".
 
 ---
 
@@ -20,13 +20,15 @@ NearbyPanel puts the same information in one list: which animals are around, how
 in which direction, and for each one being tamed, the percentage and whether it is
 hungry, frightened, or making progress.
 
+Press **N** to show and hide it.
+
 **What it deliberately is not.** The same code, with a wider radius and looser filters,
 would be a creature radar that sees through trees and fog. It isn't one: the scan radius
 is fixed at 50 m in the source and the list shows tameable creatures only. Neither is a
 setting, on purpose — see [ADR 0003](docs/adr/0003-fixed-radius-and-filters.md).
 
 **A limit worth knowing.** Valheim only keeps entities loaded within roughly 64–128 m of
-you, and the server only sends ZDOs within about ±160 m. A pen on the other side of the
+you, and the server only sends records within about ±160 m. A pen on the other side of the
 map is invisible to any client-side mod, this one included.
 
 ## Installing
@@ -39,17 +41,18 @@ Not yet published. Once there is a release:
    `BepInEx/plugins/NearbyPanel/`, or install the zip through your mod manager.
 3. Launch. `LogOutput.log` should contain `NearbyPanel <version> loaded (client-side only).`
 
-**On your server:** nothing to do. The mod registers no RPC, writes no ZDO and takes part
+**On your server:** nothing to do. The mod registers no RPC, writes nothing and takes part
 in no version handshake, so it neither requires the server to have it nor prevents you
 joining one that does not. Other players are unaffected and see nothing different.
 
 Settings live in `BepInEx/config/siam.NearbyPanel.cfg`, or in the in-game configuration
-manager if you have one installed.
+manager if you have one installed: toggle key, panel position and width, visible rows and
+font size.
 
 ## Building
 
-Needs the .NET SDK (8 or later), and Valheim installed — the project references the game's
-own assemblies straight from the Steam folder.
+Needs the .NET SDK (8 or later) and Valheim installed — the project references the game's
+own assemblies straight from the Steam folder, so this is Windows-only in practice.
 
 ```sh
 git clone <this repo>
@@ -73,11 +76,10 @@ dotnet build -p:Deploy=true
 ```
 
 That copies both DLLs (and the `.pdb` in Debug) into `<BepInExPath>/plugins/NearbyPanel/`.
-Use a **separate r2modman profile for development** rather than the one you play on, and
-point the build at it:
+Use a **separate r2modman profile for development** rather than the one you play on:
 
 ```sh
-dotnet build -p:Deploy=true -p:BepInExPath="$APPDATA\r2modmanPlus-local\Valheim\profiles\Dev\BepInEx"
+dotnet build -p:Deploy=true -p:BepInExPath="%APPDATA%\r2modmanPlus-local\Valheim\profiles\Dev\BepInEx"
 ```
 
 Override the destination directly with `-p:DeployPath=...` if you prefer.
@@ -85,12 +87,13 @@ Override the destination directly with `-p:DeployPath=...` if you prefer.
 ### Packaging a release
 
 ```powershell
-pwsh -File build/Package.ps1
+powershell -File build/Package.ps1
 ```
 
 Builds Release, checks that `package/manifest.json` and `PluginInfo.cs` agree on the
 version, checks the icon is exactly 256×256, and writes a verified zip to `build/out/`.
-You need to supply `package/icon.png` yourself.
+`package/icon.png` is committed but is a placeholder — replace it with something better
+before publishing.
 
 ## Testing
 
@@ -110,19 +113,29 @@ pure functions over plain data. See [ADR 0004](docs/adr/0004-core-plugin-split.m
 **API guard tests** over the installed game assembly. The plugin binds to Valheim by name
 at runtime, so when Iron Gate renames or hides a member, nothing fails at build time — you
 find out as a `MissingMethodException` mid-session. These tests read
-`assembly_valheim.dll` with Mono.Cecil and assert that every game member the plugin uses
-still exists, with the same shape and visibility. One test per member, so a red test
-points straight at the call site that needs attention.
+`assembly_valheim.dll` and `assembly_guiutils.dll` with Mono.Cecil and assert that every
+game member the plugin uses still exists, with the same shape and visibility. One test per
+member, so a red test points straight at the call site that needs attention.
 
-If Valheim is not in a standard location, set `VALHEIM_MANAGED`:
+If Valheim is not in a standard location, point `VALHEIM_MANAGED` at it — an explicit
+value replaces the default search rather than adding to it:
 
 ```sh
 VALHEIM_MANAGED="D:\Games\Valheim\valheim_Data\Managed" dotnet test
 ```
 
-Without a game assembly the guard tests pass rather than fail, so the rest of the suite
-still runs on a machine without Valheim. That means a green suite on such a machine does
-**not** prove API compatibility — check that the guards actually ran before trusting them.
+Without a game assembly the guard tests cannot assert anything, so they return quietly.
+That would be a silent hole, so `GuardsAreArmedTests` **fails the run** when it happens.
+On a machine with no Valheim at all, acknowledge it explicitly:
+
+```sh
+NEARBYPANEL_ALLOW_MISSING_GAME=1 dotnet test tests/NearbyPanel.Tests/NearbyPanel.Tests.csproj
+```
+
+Note the explicit project path there: a bare `dotnet test` builds the whole solution,
+including the plugin, whose references point into the game folder — so without Valheim it
+fails at build time, before any test runs. The Tests project references only Core, so
+naming it directly works anywhere.
 
 ### Manual — the rest of it
 
@@ -134,36 +147,45 @@ leaking into the chat box, multiplayer safety, and an oracle check of every disp
 against the game's own hover text.
 
 The console command `nearby_dump` writes the current list to `LogOutput.log` using the same
-formatter as the panel, so the log is a diffable record of what the panel showed.
+formatter as the panel, so the log is a diffable record of what the panel showed. It
+applies the same filter as the panel, deliberately — see ADR 0003.
 
 ### Fast iteration
 
 [ScriptEngine](https://github.com/BepInEx/BepInEx.Debug) (r11.1) reloads a plugin with F6:
 point `DeployPath` at `BepInEx/scripts` instead of `BepInEx/plugins`. It does not undo
-Harmony patches, so unpatch in `OnDestroy` or you will stack them.
+Harmony patches — irrelevant here, since this mod has none.
 [RuntimeUnityEditor](https://github.com/ManlyMarco/RuntimeUnityEditor) browses the live
 scene and is the fastest way to check the scan against reality. DemystifyExceptions, in the
 same package as ScriptEngine, makes Mono stack traces readable.
 
 ## Contributing
 
-Work in phases, one branch each, as listed in [`TODO.md`](TODO.md). A phase is done when
-its boxes are ticked and `dotnet test` is green — not when the code is written.
+The work is organised in phases, one git branch each: scaffolding, the Core model, the API
+guards, the scan adapter, the panel, taming detail, packaging. A phase is done when
+`dotnet test` is green **and** the relevant lines of `docs/MANUAL_TESTS.md` have been
+walked in game — not when the code compiles.
 
 - **Read [`CONTEXT.md`](CONTEXT.md) first.** It defines the vocabulary the code uses (ZDO,
   ZDO owner, zone, simulation distance, alerted vs aware) with the values verified against
   a specific game version. Guessing at these is how subtle bugs get in.
-- **Decisions that constrain later work go in an ADR** under `docs/adr/`, with the context
-  that made the decision reasonable. Four exist; read them before arguing with the
-  architecture.
+- **Decisions that constrain later work go in an ADR** under [`docs/adr/`](docs/adr/), with
+  the context that made the decision reasonable. Five exist; read them before arguing with
+  the architecture.
 - **Keep game types out of Core.** The netstandard2.0 target enforces it, so if you find
   yourself wanting a `UnityEngine.Vector3` in there, the conversion belongs at the adapter
   boundary instead.
-- **Add an API guard test** whenever you bind to a new game member. It costs four lines and
-  converts a future crash into a build failure.
+- **Prefer moving a decision into Core over testing it in place.** If a rule can be
+  expressed over primitives, it belongs where it can be tested.
+- **Add an API guard test** whenever you bind to a new game member, and delete one when you
+  stop using a member. A guard for something the code no longer touches is a false alarm.
 - **Add a line to `MANUAL_TESTS.md`** for anything you cannot cover automatically.
 - **Read a value off the live component, never hardcode it.** `m_tamingTime`,
   `m_fedDuration` and friends are serialized per prefab and are not in the assembly.
+- **Only read.** No RPC, no `ZDO.Set`, no Harmony patch on anything networked. Note that
+  some innocent-looking game getters write: `Character.GetHoverName()` can write back a
+  legacy author id for a tamed animal, which is why this mod reads the name out of the
+  record itself.
 - **Never commit game binaries.** `assembly_valheim.dll` and the Unity assemblies are Iron
   Gate's and Unity's, distributed under the Steam EULA, which grants no redistribution
   right. `.gitignore` blocks them and landed in the first commit — keep it that way, and

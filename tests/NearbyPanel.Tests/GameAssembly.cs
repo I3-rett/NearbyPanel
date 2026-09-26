@@ -72,7 +72,14 @@ internal static class GameAssembly
 
         if (parameterTypes.Length == 0)
         {
-            return candidates[0];
+            // Must not just take the first: if Iron Gate adds an overload and makes
+            // the parameterless one internal, returning "some method with this name"
+            // keeps the guard green while the call site breaks in game.
+            MethodDefinition? parameterless = candidates.FirstOrDefault(m => m.Parameters.Count == 0);
+
+            return parameterless ?? throw new InvalidOperationException(
+                $"'{typeName}.{methodName}' exists but has no parameterless overload. " +
+                $"Found: {string.Join(" | ", candidates.Select(Describe))}");
         }
 
         MethodDefinition? match = candidates.FirstOrDefault(m =>
@@ -117,7 +124,11 @@ internal static class GameAssembly
         string? fromEnvironment = Environment.GetEnvironmentVariable("VALHEIM_MANAGED");
         if (!string.IsNullOrWhiteSpace(fromEnvironment))
         {
+            // An explicit setting wins outright. Falling back to the default paths
+            // after it would quietly test a different install than the one asked
+            // for, and would make a deliberately wrong value untestable.
             yield return fromEnvironment!;
+            yield break;
         }
 
         yield return @"C:\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed";

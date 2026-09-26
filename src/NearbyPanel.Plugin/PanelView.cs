@@ -15,14 +15,23 @@ namespace NearbyPanel;
 internal sealed class PanelView
 {
     private const float Padding = 8f;
-    private const float RowHeight = 18f;
 
-    /// <summary>Left offset of each column, as a fraction of the panel width.</summary>
-    private static readonly float[] ColumnOffsets = { 0.00f, 0.42f, 0.55f, 0.64f, 0.73f, 0.80f };
+    /// <summary>
+    /// Left edge of each column as a fraction of the inner width, plus a final 1.0
+    /// so the last column has a right edge. NAME and STATUS carry the long text and
+    /// get a third of the width each; the four numeric columns share the middle.
+    /// </summary>
+    private static readonly float[] ColumnEdges = { 0.00f, 0.34f, 0.46f, 0.55f, 0.63f, 0.68f, 1.00f };
+
+    // Reused every draw: OnGUI runs at least twice a frame, and allocating a fresh
+    // array per row per call is pure garbage.
+    private readonly string[] _values = new string[6];
 
     private GUIStyle? _rowStyle;
+    private GUIStyle? _rowStyleRight;
     private GUIStyle? _headerStyle;
     private GUIStyle? _boxStyle;
+    private int _styleFontSize = -1;
 
     public void Draw(
         IReadOnlyList<RowCells> rows,
@@ -34,70 +43,77 @@ internal sealed class PanelView
     {
         EnsureStyles(fontSize);
 
+        // Rows must grow with the text, or a large font overlaps and clips.
+        float rowHeight = Mathf.Max(14f, fontSize * 1.35f);
+
         int shown = Mathf.Min(rows.Count, maxVisibleRows);
         bool truncated = rows.Count > shown;
 
         // title + header + rows (+ a line saying how many were hidden)
         float lines = 2f + shown + (truncated ? 1f : 0f);
-        float height = (Padding * 2f) + (lines * RowHeight);
+        float height = (Padding * 2f) + (lines * rowHeight);
 
         Rect panel = new(anchor.x, anchor.y, width, height);
         GUI.Box(panel, GUIContent.none, _boxStyle);
 
         float y = panel.y + Padding;
         float innerWidth = width - (Padding * 2f);
+        float x = panel.x + Padding;
 
-        GUI.Label(new Rect(panel.x + Padding, y, innerWidth, RowHeight), title, _headerStyle);
-        y += RowHeight;
+        GUI.Label(new Rect(x, y, innerWidth, rowHeight), title, _headerStyle);
+        y += rowHeight;
 
-        DrawCells(panel.x + Padding, y, innerWidth, RowFormatter.ColumnNames, _headerStyle!);
-        y += RowHeight;
+        DrawCells(x, y, innerWidth, rowHeight, RowFormatter.ColumnNames, header: true);
+        y += rowHeight;
 
         for (int i = 0; i < shown; i++)
         {
             RowCells cells = rows[i];
-            string[] values =
-            {
-                cells.Name,
-                cells.Distance,
-                cells.Direction,
-                cells.Altitude,
-                cells.Level,
-                cells.Status,
-            };
+            _values[0] = cells.Name;
+            _values[1] = cells.Distance;
+            _values[2] = cells.Direction;
+            _values[3] = cells.Altitude;
+            _values[4] = cells.Level;
+            _values[5] = cells.Status;
 
-            DrawCells(panel.x + Padding, y, innerWidth, values, _rowStyle!);
-            y += RowHeight;
+            DrawCells(x, y, innerWidth, rowHeight, _values, header: false);
+            y += rowHeight;
         }
 
         if (truncated)
         {
             GUI.Label(
-                new Rect(panel.x + Padding, y, innerWidth, RowHeight),
+                new Rect(x, y, innerWidth, rowHeight),
                 "+" + (rows.Count - shown) + " more",
                 _rowStyle);
         }
     }
 
-    private static void DrawCells(float x, float y, float width, string[] values, GUIStyle style)
+    private void DrawCells(float x, float y, float width, float rowHeight, string[] values, bool header)
     {
-        for (int column = 0; column < values.Length && column < ColumnOffsets.Length; column++)
-        {
-            float left = x + (ColumnOffsets[column] * width);
-            float right = column + 1 < ColumnOffsets.Length
-                ? x + (ColumnOffsets[column + 1] * width)
-                : x + width;
+        bool[] rightAligned = RowFormatter.ColumnRightAligned;
 
-            GUI.Label(new Rect(left, y, right - left, RowHeight), values[column], style);
+        for (int column = 0; column < values.Length && column + 1 < ColumnEdges.Length; column++)
+        {
+            float left = x + (ColumnEdges[column] * width);
+            float right = x + (ColumnEdges[column + 1] * width);
+
+            GUIStyle style = header
+                ? _headerStyle!
+                : column < rightAligned.Length && rightAligned[column] ? _rowStyleRight! : _rowStyle!;
+
+            GUI.Label(new Rect(left, y, right - left, rowHeight), values[column], style);
         }
     }
 
     private void EnsureStyles(int fontSize)
     {
-        if (_rowStyle != null && _rowStyle.fontSize == fontSize)
+        if (_rowStyle != null && _styleFontSize == fontSize)
         {
             return;
         }
+
+        _styleFontSize = fontSize;
 
         _rowStyle = new GUIStyle(GUI.skin.label)
         {
@@ -105,6 +121,12 @@ internal sealed class PanelView
             alignment = TextAnchor.MiddleLeft,
             clipping = TextClipping.Clip,
             wordWrap = false,
+        };
+
+        // Numbers read better flush right, and it matches the console dump.
+        _rowStyleRight = new GUIStyle(_rowStyle)
+        {
+            alignment = TextAnchor.MiddleRight,
         };
 
         _headerStyle = new GUIStyle(_rowStyle)

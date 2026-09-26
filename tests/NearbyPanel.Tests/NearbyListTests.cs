@@ -12,9 +12,9 @@ public class NearbyListTests
     private static NearbyEntity At(
         string name,
         float x,
-        EntityKind kind = EntityKind.Creature,
-        float? progress = null) =>
-        new(name, kind, new Vec3(x, 0f, 0f), 1, null, progress);
+        float y = 0f,
+        EntityKind kind = EntityKind.Creature) =>
+        new(name, kind, new Vec3(x, y, 0f), 1, null, null);
 
     [Fact]
     public void Build_orders_nearest_first()
@@ -46,6 +46,27 @@ public class NearbyListTests
     }
 
     [Fact]
+    public void Build_measures_in_three_dimensions_like_the_game_does()
+    {
+        // 45 m out and 25 m down is 51.5 m in 3-D: the game's own range query would
+        // never hand it over, so the list must not claim it either.
+        List<NearbyEntity> found = new() { At("below the cliff", 45f, -25f) };
+
+        Assert.Empty(NearbyList.Build(found, Viewer, radius: 50f, limit: 10));
+    }
+
+    [Fact]
+    public void Build_orders_by_three_dimensional_distance()
+    {
+        // Same ground distance, different heights.
+        List<NearbyEntity> found = new() { At("high", 10f, 20f), At("level", 10f, 0f) };
+
+        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 10);
+
+        Assert.Equal(new[] { "level", "high" }, rows.Select(r => r.Name));
+    }
+
+    [Fact]
     public void Build_caps_at_the_limit_keeping_the_closest()
     {
         List<NearbyEntity> found = new() { At("a", 1f), At("b", 2f), At("c", 3f) };
@@ -58,11 +79,14 @@ public class NearbyListTests
     [Fact]
     public void Build_breaks_distance_ties_on_name_so_the_order_is_stable()
     {
+        // The scan's enumeration order is not guaranteed stable between frames, so
+        // without this the rows would swap places while nothing moved.
         List<NearbyEntity> found = new() { At("zebra", 10f), At("aardvark", 10f) };
+        List<NearbyEntity> reversed = new() { At("aardvark", 10f), At("zebra", 10f) };
 
-        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 10);
-
-        Assert.Equal(new[] { "aardvark", "zebra" }, rows.Select(r => r.Name));
+        Assert.Equal(
+            NearbyList.Build(found, Viewer, 50f, 10).Select(r => r.Name),
+            NearbyList.Build(reversed, Viewer, 50f, 10).Select(r => r.Name));
     }
 
     [Fact]
@@ -70,7 +94,7 @@ public class NearbyListTests
     {
         List<NearbyEntity> found = new()
         {
-            At("boar", 5f, EntityKind.Tameable),
+            At("boar", 5f, kind: EntityKind.Tameable),
             At("greydwarf", 6f),
         };
 
@@ -81,20 +105,43 @@ public class NearbyListTests
     }
 
     [Fact]
+    public void IsTameable_includes_animals_that_are_already_tamed()
+    {
+        // The kind comes from the component being present, not from taming state,
+        // so your own pets appear in the list.
+        NearbyEntity pet = new("Fenrir", EntityKind.Tameable, new Vec3(1f, 0f, 0f), 2, "Happy", null);
+
+        Assert.True(NearbyList.IsTameable(pet));
+    }
+
+    [Fact]
     public void Build_returns_empty_when_nothing_is_nearby()
     {
         Assert.Empty(NearbyList.Build(new List<NearbyEntity>(), Viewer, 50f, 10));
     }
 
     [Theory]
-    [InlineData(null, false)]
-    [InlineData(0f, false)]
-    [InlineData(0.5f, true)]
-    [InlineData(1f, false)]
-    public void IsBeingTamed_only_covers_taming_in_progress(float? progress, bool expected)
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Build_returns_empty_for_a_useless_limit(int limit)
     {
-        NearbyEntity entity = At("x", 1f, EntityKind.Tameable, progress);
+        List<NearbyEntity> found = new() { At("a", 1f) };
 
-        Assert.Equal(expected, NearbyList.IsBeingTamed(entity));
+        Assert.Empty(NearbyList.Build(found, Viewer, 50f, limit));
+    }
+
+    [Fact]
+    public void Build_drops_entities_at_an_unusable_position_rather_than_listing_them()
+    {
+        List<NearbyEntity> found = new()
+        {
+            new("broken", EntityKind.Creature, new Vec3(float.NaN, 0f, 0f), 1, null, null),
+            At("fine", 5f),
+        };
+
+        var rows = NearbyList.Build(found, Viewer, 50f, 10);
+
+        Assert.Single(rows);
+        Assert.Equal("fine", rows[0].Name);
     }
 }

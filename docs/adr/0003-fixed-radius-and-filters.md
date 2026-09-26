@@ -31,3 +31,15 @@ Starting values: radius 50 m, default filter `NearbyList.IsTameable`.
   is documented in the README as what it is.
 - This closes the door on "just make it configurable" as a response to a feature request.
   That is the point.
+
+## Amendment, 2026-09-27
+
+The `nearby_dump` console command briefly took an `all` argument that dropped the filter
+and listed every creature in range — players included — by name, distance and bearing. It
+was added for debugging and it is exactly the thing this ADR exists to prevent: a console
+argument is a *weaker* gate than the slider the decision above already rejects, not a
+stronger one, and it shipped undocumented in the main README.
+
+It has been removed. `nearby_dump` now applies the same filter as the panel. If a
+debugging view of everything nearby is ever needed again, it belongs behind the game's own
+cheat gate (`isCheat: true` on the command), not behind an argument.

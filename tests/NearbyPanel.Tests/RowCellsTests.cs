@@ -12,13 +12,15 @@ public class RowCellsTests
 {
     private static readonly Vec3 Viewer = new(0f, 0f, 0f);
     private static readonly Vec3 North = new(0f, 0f, 1f);
+    private static readonly Vec3 East = new(1f, 0f, 0f);
 
-    private static RowCells CellsFor(NearbyEntity entity) =>
-        RowFormatter.Cells(entity, Viewer, North);
+    private static RowCells CellsFor(NearbyEntity entity, Vec3? forward = null) =>
+        RowFormatter.Cells(entity, Viewer, forward ?? North);
 
     [Fact]
-    public void Distance_is_one_decimal_and_ignores_height()
+    public void Distance_is_the_ground_distance_to_one_decimal()
     {
+        // Ground distance, not 3-D: this is the number you walk.
         NearbyEntity entity = new("Boar", EntityKind.Tameable, new Vec3(3f, 99f, 4f), 1, null, null);
 
         Assert.Equal("5.0", CellsFor(entity).Distance);
@@ -37,11 +39,22 @@ public class RowCellsTests
     }
 
     [Fact]
-    public void Direction_is_a_compass_point()
+    public void Direction_is_relative_to_where_the_viewer_faces()
     {
-        NearbyEntity right = new("R", EntityKind.Creature, new Vec3(10f, 0f, 0f), 1, null, null);
+        NearbyEntity due_north = new("N", EntityKind.Creature, new Vec3(0f, 0f, 10f), 1, null, null);
 
-        Assert.Equal("E", CellsFor(right).Direction);
+        Assert.Equal("F", CellsFor(due_north).Direction);
+        Assert.Equal("L", CellsFor(due_north, East).Direction);
+    }
+
+    [Fact]
+    public void Level_is_rendered_as_stars()
+    {
+        NearbyEntity ordinary = new("A", EntityKind.Creature, new Vec3(0f, 0f, 5f), 1, null, null);
+        NearbyEntity oneStar = new("B", EntityKind.Creature, new Vec3(0f, 0f, 5f), 2, null, null);
+
+        Assert.Equal("-", CellsFor(ordinary).Level);
+        Assert.Equal("1", CellsFor(oneStar).Level);
     }
 
     [Fact]
@@ -80,8 +93,20 @@ public class RowCellsTests
     }
 
     [Fact]
-    public void ColumnNames_match_the_cell_order()
+    public void A_missing_name_becomes_empty_rather_than_null()
     {
-        Assert.Equal(new[] { "NAME", "DIST", "DIR", "ALT", "LVL", "STATUS" }, RowFormatter.ColumnNames);
+        NearbyEntity entity = new(null!, EntityKind.Creature, new Vec3(0f, 0f, 5f), 1, null, null);
+
+        Assert.Equal(string.Empty, CellsFor(entity).Name);
+    }
+
+    [Fact]
+    public void ColumnNames_and_alignment_line_up_with_the_cells()
+    {
+        // PanelView builds its values array in this order; if the two drift the
+        // panel silently draws the level under ALT.
+        Assert.Equal(6, RowFormatter.ColumnNames.Length);
+        Assert.Equal(6, RowFormatter.ColumnRightAligned.Length);
+        Assert.Equal(6, RowFormatter.ColumnOffsets().Length);
     }
 }

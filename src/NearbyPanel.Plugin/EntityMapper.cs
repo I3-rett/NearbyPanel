@@ -16,9 +16,7 @@ internal static class EntityMapper
     /// Describes <paramref name="character"/> as a row, or returns null when it
     /// should not be listed at all.
     /// </summary>
-    /// <param name="tracker">Smooths taming progress between the owner's writes.</param>
-    /// <param name="now">A monotonic clock in seconds, normally <c>Time.unscaledTime</c>.</param>
-    public static NearbyEntity? FromCharacter(Character character, TamingTracker tracker, float now)
+    public static NearbyEntity? FromCharacter(Character character)
     {
         if (character == null || character.IsDead())
         {
@@ -37,12 +35,44 @@ internal static class EntityMapper
             : tameable != null ? EntityKind.Tameable : EntityKind.Creature;
 
         return new NearbyEntity(
-            Name: Localize(character.GetHoverName()),
+            Name: NameOf(character, tameable),
             Kind: kind,
-            Position: ToVec3(character.GetCenterPoint()),
+            // transform.position, not GetCenterPoint(): the viewer is measured at the
+            // player's feet, and comparing feet against a collider centre made the
+            // altitude column read about +1 for a creature standing level with you.
+            Position: ToVec3(character.transform.position),
             Level: character.GetLevel(),
             Status: tameable != null ? Localize(tameable.GetStatusString()) : null,
-            TamingProgress: TamingProgress(character, tameable, tracker, now));
+            TamingProgress: TamingProgress(tameable));
+    }
+
+    /// <summary>
+    /// What to call this creature: its given name if it has been named, otherwise
+    /// its species.
+    ///
+    /// The name is read out of the network record directly rather than through
+    /// <c>Character.GetHoverName()</c>, which for a tamed animal reaches
+    /// <c>Tameable.GetText()</c> and can write back a legacy author id — a write the
+    /// game guards behind a dedicated-server check, but a write all the same. This
+    /// mod only reads. It also avoids localizing an already-localized string, which
+    /// pollutes the game's translation cache with identity entries.
+    /// </summary>
+    private static string NameOf(Character character, Tameable? tameable)
+    {
+        if (tameable != null && tameable.IsTamed())
+        {
+            ZDO? zdo = ZdoOf(tameable);
+            if (zdo != null)
+            {
+                string given = zdo.GetString(ZDOVars.s_tamedName, string.Empty);
+                if (!string.IsNullOrEmpty(given))
+                {
+                    return given;
+                }
+            }
+        }
+
+        return Localize(character.m_name);
     }
 
     /// <summary>
@@ -50,16 +80,12 @@ internal static class EntityMapper
     /// already tamed, not tameable, or the record is not readable yet.
     ///
     /// Read from the ZDO rather than the component, because the value is only
-    /// written by whichever peer owns the creature. Reading the ZDO is what lets
-    /// this work for an animal a friend is taming. The owner writes once every
-    /// three seconds, so the raw figure steps; <see cref="TamingTracker"/> fills in
-    /// between, but only while taming is actually running.
+    /// written by whichever peer owns the creature. That is what lets this work for
+    /// an animal a friend is taming. The owner writes once every three seconds and
+    /// vanilla taming takes many minutes, so the whole-percent figure simply steps
+    /// every few seconds; it is reported as read, with no smoothing.
     /// </summary>
-    private static float? TamingProgress(
-        Character character,
-        Tameable? tameable,
-        TamingTracker tracker,
-        float now)
+    private static float? TamingProgress(Tameable? tameable)
     {
         if (tameable == null || tameable.IsTamed())
         {
@@ -74,13 +100,7 @@ internal static class EntityMapper
             return null;
         }
 
-        ZNetView view = tameable.GetComponent<ZNetView>();
-        if (view == null || !view.IsValid())
-        {
-            return null;
-        }
-
-        ZDO zdo = view.GetZDO();
+        ZDO? zdo = ZdoOf(tameable);
         if (zdo == null)
         {
             return null;
@@ -89,29 +109,13 @@ internal static class EntityMapper
         // Defaulting to the full duration means "no key written yet" reads as 0%,
         // which is what the game itself does.
         float remaining = zdo.GetFloat(ZDOVars.s_tameTimeLeft, total);
-
-        return tracker.Progress(
-            key: tameable.GetInstanceID(),
-            remainingSeconds: remaining,
-            totalSeconds: total,
-            now: now,
-            paused: IsTamingPaused(character, tameable));
+        return 1f - Mathf.Clamp01(remaining / total);
     }
 
-    /// <summary>
-    /// Whether the owner's countdown is currently stopped. <c>Tameable.TamingUpdate</c>
-    /// returns early when the animal is hungry or when its AI is alerted, so these
-    /// are the two conditions under which progress does not move.
-    /// </summary>
-    private static bool IsTamingPaused(Character character, Tameable tameable)
+    private static ZDO? ZdoOf(Component component)
     {
-        if (tameable.IsHungry())
-        {
-            return true;
-        }
-
-        BaseAI ai = character.GetBaseAI();
-        return ai != null && ai.IsAlerted();
+        ZNetView view = component.GetComponent<ZNetView>();
+        return view != null && view.IsValid() ? view.GetZDO() : null;
     }
 
     private static string Localize(string token) =>

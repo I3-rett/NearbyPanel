@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
@@ -8,9 +9,9 @@ using UnityEngine;
 namespace NearbyPanel;
 
 /// <summary>
-/// Entry point. Client-side only: this plugin reads local component and ZDO state
-/// and draws a panel. It registers no RPC, writes no ZDO and takes part in no
-/// version handshake, so it never affects joining a server that does not have it.
+/// Entry point. Client-side only: this plugin reads local component and network
+/// state and draws a panel. It registers no RPC, writes nothing and takes part in
+/// no version handshake, so it never affects joining a server that does not have it.
 /// </summary>
 [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
 public sealed class Plugin : BaseUnityPlugin
@@ -37,8 +38,7 @@ public sealed class Plugin : BaseUnityPlugin
     private bool _open;
     private float _sinceRefresh;
     private bool _hadPlayer;
-    private Vec3 _viewer;
-    private Vec3 _forward;
+    private string _title = string.Empty;
 
     private void Awake()
     {
@@ -54,7 +54,8 @@ public sealed class Plugin : BaseUnityPlugin
             "General",
             "Toggle key",
             new KeyboardShortcut(KeyCode.N),
-            "Shows and hides the panel. Ignored while typing in chat or the console.");
+            "Shows and hides the panel. Ignored while typing in chat or the console. "
+            + "Note that a shortcut with no modifier will not fire while a modifier is held.");
 
         _openOnStart = Config.Bind(
             "General",
@@ -79,20 +80,24 @@ public sealed class Plugin : BaseUnityPlugin
         _panelWidth = Config.Bind(
             "Panel",
             "Width",
-            420f,
+            460f,
             new ConfigDescription("Panel width in pixels.", new AcceptableValueRange<float>(240f, 1200f)));
 
         _marginX = Config.Bind(
             "Panel",
             "Margin X",
             12f,
-            "Distance from the left edge of the screen, in pixels.");
+            new ConfigDescription(
+                "Distance from the left edge of the screen, in pixels.",
+                new AcceptableValueRange<float>(0f, 4000f)));
 
         _marginY = Config.Bind(
             "Panel",
             "Margin Y",
             120f,
-            "Distance from the top edge of the screen, in pixels.");
+            new ConfigDescription(
+                "Distance from the top edge of the screen, in pixels.",
+                new AcceptableValueRange<float>(0f, 4000f)));
 
         _open = _openOnStart.Value;
 
@@ -105,12 +110,9 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void Update()
     {
-        // Leaving a world invalidates the remembered taming state, because instance
-        // ids only mean anything while the objects they name are alive.
         bool hasPlayer = Player.m_localPlayerExists && Player.m_localPlayer != null;
         if (_hadPlayer && !hasPlayer)
         {
-            _scanner.Reset();
             _rows.Clear();
         }
 
@@ -146,14 +148,33 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void Refresh()
     {
-        IReadOnlyList<NearbyEntity> entities = _scanner.Scan(NearbyList.IsTameable);
-        _viewer = _scanner.Viewer;
-        _forward = _scanner.Forward;
-
-        _rows.Clear();
-        foreach (NearbyEntity entity in entities)
+        try
         {
-            _rows.Add(RowFormatter.Cells(entity, _viewer, _forward));
+            IReadOnlyList<NearbyEntity> entities = _scanner.Scan(NearbyList.IsTameable);
+
+            _rows.Clear();
+            foreach (NearbyEntity entity in entities)
+            {
+                _rows.Add(RowFormatter.Cells(entity, _scanner.Viewer, _scanner.Forward));
+            }
+
+            // Built once per refresh rather than per OnGUI call, of which there are
+            // at least two a frame.
+            _title = _rows.Count == 0
+                ? "Nearby — nothing within " + Tuning.RadiusLabel + " m"
+                : "Nearby — " + _rows.Count + " within " + Tuning.RadiusLabel + " m";
+
+            if (_scanner.Faulted)
+            {
+                _title += " (partial)";
+            }
+        }
+        catch (Exception error)
+        {
+            // A refresh must never take Update down with it; the panel keeps its
+            // previous rows and says so.
+            _title = "Nearby — error, see the log";
+            Log.LogError("NearbyPanel refresh failed: " + error);
         }
     }
 
@@ -164,16 +185,18 @@ public sealed class Plugin : BaseUnityPlugin
             return;
         }
 
-        string title = _rows.Count == 0
-            ? "Nearby — nothing within " + Tuning.ScanRadius.ToString("0") + " m"
-            : "Nearby — " + _rows.Count + " within " + Tuning.ScanRadius.ToString("0") + " m";
+        // Clamped so a stray config value cannot park the panel off-screen with no
+        // way to bring it back without editing the file.
+        float width = Mathf.Min(_panelWidth.Value, Screen.width - 16f);
+        float x = Mathf.Clamp(_marginX.Value, 0f, Mathf.Max(0f, Screen.width - width));
+        float y = Mathf.Clamp(_marginY.Value, 0f, Mathf.Max(0f, Screen.height - 64f));
 
         _view.Draw(
             _rows,
-            new Vector2(_marginX.Value, _marginY.Value),
-            _panelWidth.Value,
+            new Vector2(x, y),
+            width,
             _maxVisibleRows.Value,
             _fontSize.Value,
-            title);
+            _title);
     }
 }
