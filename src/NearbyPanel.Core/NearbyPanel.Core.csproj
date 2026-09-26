@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Deliberately netstandard2.0: this project must never be able to reference
+       UnityEngine or BepInEx. Everything here is pure, deterministic logic and is
+       covered by unit tests. See docs/adr/0004-core-plugin-split.md -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>NearbyPanel.Core</AssemblyName>
+    <RootNamespace>NearbyPanel.Core</RootNamespace>
+  </PropertyGroup>
+
+</Project>
