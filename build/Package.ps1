@@ -44,10 +44,8 @@ Write-Host "Packaging NearbyPanel $sourceVersion ($Configuration)"
 
 # --- build -----------------------------------------------------------------
 
-# DeployPath is redirected so packaging never writes into the live profile.
-& dotnet build (Join-Path $root 'NearbyPanel.sln') `
-    -c $Configuration -v m -nologo `
-    -p:DeployPath=(Join-Path $outDir 'deploy')
+# Deploy is left off, so packaging never writes into a play profile.
+& dotnet build (Join-Path $root 'NearbyPanel.sln') -c $Configuration -v m -nologo
 if ($LASTEXITCODE -ne 0) {
     throw "Build failed with exit code $LASTEXITCODE."
 }

@@ -74,9 +74,15 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Deploy straight into the r2modman profile. Retries because Windows
-       Defender briefly locks a freshly written DLL while it scans it. -->
-  <Target Name="DeployToProfile" AfterTargets="Build" Condition="Exists('$(BepInExPath)\core')">
+  <!-- Deployment is opt-in: dotnet build -p:Deploy=true
+       It must never be a side effect of a plain build. DeployPath points at a
+       profile that is actually played on, and dropping a half-finished plugin
+       there means it loads on the next launch. Prefer a separate r2modman profile
+       for development and pass -p:BepInExPath to target it.
+       Retries because Windows Defender briefly locks a freshly written DLL while
+       it scans it. -->
+  <Target Name="DeployToProfile" AfterTargets="Build"
+          Condition="'$(Deploy)' == 'true' AND Exists('$(BepInExPath)\core')">
     <MakeDir Directories="$(DeployPath)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployPath)"
           SkipUnchangedFiles="false" Retries="5" RetryDelayMilliseconds="500" />

@@ -65,12 +65,22 @@ your layout differs:
 dotnet build -p:GamePath="D:\Games\Valheim" -p:BepInExPath="D:\Games\Valheim\BepInEx"
 ```
 
-A successful build **deploys straight into your BepInEx profile** (`plugins/NearbyPanel/`).
-Point `DeployPath` elsewhere to stop that:
+A plain build writes to `bin/` and nowhere else. Installing into a BepInEx profile is
+opt-in, so that building never drops a half-finished plugin into a game you actually play:
 
 ```sh
-dotnet build -p:DeployPath="C:\somewhere\else"
+dotnet build -p:Deploy=true
 ```
+
+That copies both DLLs (and the `.pdb` in Debug) into `<BepInExPath>/plugins/NearbyPanel/`.
+Use a **separate r2modman profile for development** rather than the one you play on, and
+point the build at it:
+
+```sh
+dotnet build -p:Deploy=true -p:BepInExPath="$APPDATA\r2modmanPlus-local\Valheim\profiles\Dev\BepInEx"
+```
+
+Override the destination directly with `-p:DeployPath=...` if you prefer.
 
 ### Packaging a release
 
