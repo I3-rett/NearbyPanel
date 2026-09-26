@@ -36,6 +36,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     private bool _open;
     private float _sinceRefresh;
+    private bool _hadPlayer;
     private Vec3 _viewer;
     private Vec3 _forward;
 
@@ -104,6 +105,17 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void Update()
     {
+        // Leaving a world invalidates the remembered taming state, because instance
+        // ids only mean anything while the objects they name are alive.
+        bool hasPlayer = Player.m_localPlayerExists && Player.m_localPlayer != null;
+        if (_hadPlayer && !hasPlayer)
+        {
+            _scanner.Reset();
+            _rows.Clear();
+        }
+
+        _hadPlayer = hasPlayer;
+
         if (!Enabled.Value)
         {
             _open = false;

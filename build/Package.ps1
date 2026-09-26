@@ -89,7 +89,11 @@ finally {
 # --- zip, then verify ------------------------------------------------------
 
 $zipPath = Join-Path $outDir "NearbyPanel-$sourceVersion.zip"
-$expectedNames = $expected | ForEach-Object { $_.Name }
+
+# @() everywhere a pipeline result is counted: Where-Object yields a bare object
+# rather than an array when it matches exactly once, and under StrictMode reading
+# .Count on that throws instead of returning 1.
+$expectedNames = @($expected | ForEach-Object { $_.Name })
 
 $attempt = 0
 while ($true) {
@@ -106,15 +110,15 @@ while ($true) {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
         try {
-            $present = $archive.Entries | ForEach-Object { $_.FullName }
-            $missing = $expectedNames | Where-Object { $present -notcontains $_ }
+            $present = @($archive.Entries | ForEach-Object { $_.FullName })
+            $missing = @($expectedNames | Where-Object { $present -notcontains $_ })
         }
         finally {
             $archive.Dispose()
         }
     }
     else {
-        $missing = $expectedNames
+        $missing = @($expectedNames)
     }
 
     if ($missing.Count -eq 0) {

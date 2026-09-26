@@ -16,7 +16,9 @@ internal static class EntityMapper
     /// Describes <paramref name="character"/> as a row, or returns null when it
     /// should not be listed at all.
     /// </summary>
-    public static NearbyEntity? FromCharacter(Character character)
+    /// <param name="tracker">Smooths taming progress between the owner's writes.</param>
+    /// <param name="now">A monotonic clock in seconds, normally <c>Time.unscaledTime</c>.</param>
+    public static NearbyEntity? FromCharacter(Character character, TamingTracker tracker, float now)
     {
         if (character == null || character.IsDead())
         {
@@ -40,7 +42,7 @@ internal static class EntityMapper
             Position: ToVec3(character.GetCenterPoint()),
             Level: character.GetLevel(),
             Status: tameable != null ? Localize(tameable.GetStatusString()) : null,
-            TamingProgress: TamingProgress(tameable));
+            TamingProgress: TamingProgress(character, tameable, tracker, now));
     }
 
     /// <summary>
@@ -50,9 +52,14 @@ internal static class EntityMapper
     /// Read from the ZDO rather than the component, because the value is only
     /// written by whichever peer owns the creature. Reading the ZDO is what lets
     /// this work for an animal a friend is taming. The owner writes once every
-    /// three seconds, so the figure advances in steps.
+    /// three seconds, so the raw figure steps; <see cref="TamingTracker"/> fills in
+    /// between, but only while taming is actually running.
     /// </summary>
-    private static float? TamingProgress(Tameable? tameable)
+    private static float? TamingProgress(
+        Character character,
+        Tameable? tameable,
+        TamingTracker tracker,
+        float now)
     {
         if (tameable == null || tameable.IsTamed())
         {
@@ -82,7 +89,29 @@ internal static class EntityMapper
         // Defaulting to the full duration means "no key written yet" reads as 0%,
         // which is what the game itself does.
         float remaining = zdo.GetFloat(ZDOVars.s_tameTimeLeft, total);
-        return 1f - Mathf.Clamp01(remaining / total);
+
+        return tracker.Progress(
+            key: tameable.GetInstanceID(),
+            remainingSeconds: remaining,
+            totalSeconds: total,
+            now: now,
+            paused: IsTamingPaused(character, tameable));
+    }
+
+    /// <summary>
+    /// Whether the owner's countdown is currently stopped. <c>Tameable.TamingUpdate</c>
+    /// returns early when the animal is hungry or when its AI is alerted, so these
+    /// are the two conditions under which progress does not move.
+    /// </summary>
+    private static bool IsTamingPaused(Character character, Tameable tameable)
+    {
+        if (tameable.IsHungry())
+        {
+            return true;
+        }
+
+        BaseAI ai = character.GetBaseAI();
+        return ai != null && ai.IsAlerted();
     }
 
     private static string Localize(string token) =>

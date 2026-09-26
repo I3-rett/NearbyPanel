@@ -13,6 +13,7 @@ internal sealed class EntityScanner
 {
     private readonly List<Character> _characters = new();
     private readonly List<NearbyEntity> _found = new();
+    private readonly TamingTracker _tracker = new();
 
     /// <summary>Where the player is, valid only after a successful scan.</summary>
     public Vec3 Viewer { get; private set; }
@@ -37,6 +38,9 @@ internal sealed class EntityScanner
         Viewer = EntityMapper.ToVec3(transform.position);
         Forward = EntityMapper.ToVec3(transform.forward);
 
+        // unscaledTime so the list keeps up while the game is paused or slowed.
+        float now = Time.unscaledTime;
+
         // Cleared first: the game appends to this list rather than replacing it.
         _characters.Clear();
         Character.GetCharactersInRange(transform.position, Tuning.ScanRadius, _characters);
@@ -44,7 +48,7 @@ internal sealed class EntityScanner
         _found.Clear();
         foreach (Character character in _characters)
         {
-            NearbyEntity? entity = EntityMapper.FromCharacter(character);
+            NearbyEntity? entity = EntityMapper.FromCharacter(character, _tracker, now);
             if (entity != null)
             {
                 _found.Add(entity);
@@ -53,4 +57,10 @@ internal sealed class EntityScanner
 
         return NearbyList.Build(_found, Viewer, Tuning.ScanRadius, Tuning.MaxRows, include);
     }
+
+    /// <summary>
+    /// Drops remembered taming state. Called on leaving a world, since instance ids
+    /// are only meaningful for as long as the objects live.
+    /// </summary>
+    public void Reset() => _tracker.Clear();
 }

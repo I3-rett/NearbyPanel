@@ -8,5 +8,5 @@ internal static class PluginInfo
 {
     public const string Guid = "siam.NearbyPanel";
     public const string Name = "NearbyPanel";
-    public const string Version = "0.1.0";
+    public const string Version = "0.2.0";
 }

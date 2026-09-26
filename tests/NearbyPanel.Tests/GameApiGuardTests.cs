@@ -151,6 +151,21 @@ public class GameApiGuardTests
 
     // ----- AI state -------------------------------------------------------
 
+    [Fact]
+    public void Character_GetBaseAI_is_public()
+    {
+        // How the mapper reaches IsAlerted to decide whether taming is paused.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Character", "GetBaseAI");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("BaseAI", method.ReturnType.Name);
+    }
+
     [Theory]
     [InlineData("IsAlerted")]
     [InlineData("HaveTarget")]

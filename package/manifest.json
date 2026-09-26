@@ -1,6 +1,6 @@
 {
   "name": "NearbyPanel",
-  "version_number": "0.1.0",
+  "version_number": "0.2.0",
   "website_url": "",
   "description": "Lists the creatures near you with distance, direction and taming progress. Client-side only.",
   "dependencies": [
