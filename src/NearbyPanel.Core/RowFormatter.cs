@@ -3,15 +3,19 @@ using System.Globalization;
 namespace NearbyPanel.Core;
 
 /// <summary>
-/// Renders one entity as the fixed-width columns the panel and the
-/// <c>nearby_dump</c> console command both use. Shared on purpose: what you read
-/// in the log is exactly what the panel shows.
+/// Turns an entity into display text. <see cref="Cells"/> is the shared source of
+/// truth; <see cref="Row"/> lays those cells out in fixed-width columns for the
+/// <c>nearby_dump</c> console command, and the panel positions the same cells
+/// itself. See <see cref="RowCells"/> for why the two differ.
 /// </summary>
 public static class RowFormatter
 {
     public const string Header = "NAME                 DIST   DIR  ALT  LVL  STATUS";
 
-    public static string Row(NearbyEntity entity, Vec3 viewer, Vec3 forward)
+    /// <summary>Column headings, in the same order as <see cref="RowCells"/>.</summary>
+    public static readonly string[] ColumnNames = { "NAME", "DIST", "DIR", "ALT", "LVL", "STATUS" };
+
+    public static RowCells Cells(NearbyEntity entity, Vec3 viewer, Vec3 forward)
     {
         float distance = Geometry.GroundDistance(viewer, entity.Position);
         float altitude = Geometry.HeightDelta(viewer, entity.Position);
@@ -24,15 +28,29 @@ public static class RowFormatter
             status = status.Length == 0 ? percent : percent + " " + status;
         }
 
+        return new RowCells(
+            Name: entity.Name,
+            Distance: distance.ToString("0.0", CultureInfo.InvariantCulture),
+            Direction: direction,
+            Altitude: altitude.ToString("+0;-0;0", CultureInfo.InvariantCulture),
+            Level: entity.Level.ToString(CultureInfo.InvariantCulture),
+            Status: status);
+    }
+
+    /// <summary>The fixed-width form, for the console and the log.</summary>
+    public static string Row(NearbyEntity entity, Vec3 viewer, Vec3 forward)
+    {
+        RowCells cells = Cells(entity, viewer, forward);
+
         return string.Format(
             CultureInfo.InvariantCulture,
-            "{0,-20} {1,5:0.0} {2,-4} {3,4:+0;-0;0} {4,3}  {5}",
-            Truncate(entity.Name, 20),
-            distance,
-            direction,
-            altitude,
-            entity.Level,
-            status);
+            "{0,-20} {1,5} {2,-4} {3,4} {4,3}  {5}",
+            Truncate(cells.Name, 20),
+            cells.Distance,
+            cells.Direction,
+            cells.Altitude,
+            cells.Level,
+            cells.Status);
     }
 
     /// <summary>

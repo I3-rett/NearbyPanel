@@ -69,6 +69,11 @@
       <HintPath>$(ValheimManaged)\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
+    <!-- TextAnchor and FontStyle, used by the GUIStyle the panel builds. -->
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(ValheimManaged)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private><SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
