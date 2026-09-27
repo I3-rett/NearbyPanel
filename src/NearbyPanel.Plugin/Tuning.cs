@@ -1,10 +1,13 @@
 namespace NearbyPanel;
 
 /// <summary>
-/// Values that are deliberately not configurable. See
-/// docs/adr/0003-fixed-radius-and-filters.md: the difference between a tool for
-/// watching your own animals and a creature radar is the radius and the filter,
-/// so neither is a setting anyone can widen at runtime.
+/// Values fixed in the source rather than exposed as settings.
+///
+/// Reach is what separates a short-range awareness tool from surveillance, so the
+/// radius is not something anyone can widen at runtime — see
+/// docs/adr/0003-fixed-radius-and-filters.md for the reasoning, and
+/// docs/adr/0007-list-all-creatures.md for the later decision to list every
+/// creature within it and offer a text filter instead of a fixed one.
 /// </summary>
 internal static class Tuning
 {
