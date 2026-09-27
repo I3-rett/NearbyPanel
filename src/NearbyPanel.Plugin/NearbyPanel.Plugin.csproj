@@ -47,7 +47,17 @@
        different path. The CLR treats those as distinct identities, which surfaces
        as InvalidCastException / MissingMethodException on types that look
        identical, and Harmony patching the wrong 0Harmony. -->
-  <ItemGroup>
+  <!-- A machine with no Valheim installed - CI, or anyone who just wants to build it -
+       compiles against published reference assemblies instead. Their file names carry a
+       -publicized suffix, but the assembly identity inside is unchanged, so the output
+       binds to the real game assemblies at runtime. -->
+  <ItemGroup Condition="'$(UseNuGetGameRefs)' == 'true'">
+    <PackageReference Include="Digitalroot.Valheim.Common.References" Version="1.0.16" />
+    <PackageReference Include="Digitalroot.References.Unity" Version="6000.0.75" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseNuGetGameRefs)' != 'true'">
     <Reference Include="assembly_valheim">
       <HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
@@ -76,10 +86,6 @@
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath>
-      <Private>False</Private><SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="0Harmony">
-      <HintPath>$(BepInExPath)\core\0Harmony.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
