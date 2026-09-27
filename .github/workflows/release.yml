@@ -96,9 +96,14 @@ jobs:
         run: |
           # The same archive a mod manager installs, attached for anyone who
           # installs by hand.
+          # Only this version's section, not the whole file: the notes would
+          # otherwise repeat every release that came before.
+          awk '/^## /{ if (seen) exit; seen=1 } seen' package/CHANGELOG.md > release-notes.md
+          cat release-notes.md
+
           gh release create "${{ github.ref_name }}" "$ZIP" \
             --title "NearbyPanel $VERSION" \
-            --notes-file package/CHANGELOG.md \
+            --notes-file release-notes.md \
             --verify-tag
 
       # Skipped unless the token is configured, so a tag never fails for want of
