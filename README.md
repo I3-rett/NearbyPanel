@@ -140,7 +140,8 @@ naming it directly works anywhere.
 ### Manual — the rest of it
 
 Anything touching Unity, the network or a live world cannot be unit tested. It is a written
-checklist instead of improvisation: [`docs/MANUAL_TESTS.md`](docs/MANUAL_TESTS.md). Work
+checklist instead of improvisation. Start with [`docs/FIRST_RUN.md`](docs/FIRST_RUN.md),
+which is the twenty-minute first pass, then [`docs/MANUAL_TESTS.md`](docs/MANUAL_TESTS.md). Work
 through all of it before a release. It covers scene transitions (menu, death, respawn,
 relog — where a badly parented panel dies), an empty list, a crowded area, input not
 leaking into the chat box, multiplayer safety, and an oracle check of every displayed value
