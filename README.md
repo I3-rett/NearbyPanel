@@ -197,5 +197,6 @@ walked in game — not when the code compiles.
 
 ## Licence
 
-_To be decided._ The mod's own code only; it links against Valheim's assemblies but
-redistributes none of them.
+[MIT](LICENSE) — the mod's own code only. It links against Valheim's and Unity's
+assemblies and redistributes none of them; those remain Iron Gate's and Unity's, under
+their own terms.
