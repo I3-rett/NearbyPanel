@@ -58,7 +58,7 @@ Needs the .NET SDK (8 or later) and Valheim installed — the project references
 own assemblies straight from the Steam folder, so this is Windows-only in practice.
 
 ```sh
-git clone <this repo>
+git clone https://github.com/I3-rett/NearbyPanel.git
 cd NearbyPanel
 dotnet build
 ```

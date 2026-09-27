@@ -63,6 +63,7 @@ Toggle key, name filter, panel position and width, visible rows and font size, i
 The panel is deliberately inert: it takes no clicks and never grabs your cursor, so it
 cannot interfere with the game. Move it with the margin settings rather than by dragging.
 
-## Licence
+## Source and licence
 
-MIT. Source and issues: see the website link on this page.
+MIT. Code, issues and the full design notes: https://github.com/I3-rett/NearbyPanel
+(published here as **mindless**, the repository is under **I3-rett**).
