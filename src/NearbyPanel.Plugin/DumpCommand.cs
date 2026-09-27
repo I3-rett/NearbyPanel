@@ -8,12 +8,9 @@ namespace NearbyPanel;
 /// console and <c>LogOutput.log</c>, using the same formatter the panel uses, so
 /// the log is a faithful record of what the panel showed.
 ///
-/// It applies the same filter as the panel, deliberately. An earlier version took
-/// an <c>all</c> argument that dropped the filter and listed every creature in
-/// range — which is precisely the creature radar
-/// docs/adr/0003-fixed-radius-and-filters.md exists to prevent, reachable by typing
-/// one extra word. A console argument is a weaker gate than the slider that ADR
-/// already rejects.
+/// It applies whatever filter the panel is applying — there is no argument that
+/// widens the view beyond what is already on screen. Set the filter with
+/// <c>nearby_filter</c>.
 /// </summary>
 internal static class DumpCommand
 {
@@ -35,17 +32,18 @@ internal static class DumpCommand
 
     private static void Run(Terminal.ConsoleEventArgs args, EntityScanner scanner)
     {
-        IReadOnlyList<NearbyEntity> rows = scanner.Scan(NearbyList.IsTameable);
+        IReadOnlyList<NearbyEntity> rows = scanner.Scan(FilterState.Predicate());
+        string scope = $"{Tuning.ScanRadius:0} m{FilterState.Describe()}";
 
         if (rows.Count == 0)
         {
             Write(args, Player.m_localPlayer == null
                 ? "no local player yet"
-                : $"nothing within {Tuning.ScanRadius:0} m");
+                : $"nothing within {scope}");
             return;
         }
 
-        Write(args, $"{rows.Count} within {Tuning.ScanRadius:0} m");
+        Write(args, $"{rows.Count} within {scope}");
         Write(args, RowFormatter.Header);
 
         foreach (NearbyEntity entity in rows)

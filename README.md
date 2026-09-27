@@ -22,10 +22,13 @@ hungry, frightened, or making progress.
 
 Press **N** to show and hide it.
 
-**What it deliberately is not.** The same code, with a wider radius and looser filters,
-would be a creature radar that sees through trees and fog. It isn't one: the scan radius
-is fixed at 50 m in the source and the list shows tameable creatures only. Neither is a
-setting, on purpose — see [ADR 0003](docs/adr/0003-fixed-radius-and-filters.md).
+**What it is, plainly.** It lists every creature within 50 m, so it is a short-range
+creature radar: it sees things through trees and fog that you could not see yourself. That
+was a deliberate choice, taken with the objection on the table — see
+[ADR 0007](docs/adr/0007-list-all-creatures.md). Two limits are not configurable: the
+**radius is a 50 m constant** in the source ([ADR 0003](docs/adr/0003-fixed-radius-and-filters.md)),
+and **other players are never listed**. A free-text filter narrows the list by name when it
+gets busy: `nearby_filter boar` in the console, or the `Name filter` setting.
 
 **A limit worth knowing.** Valheim only keeps entities loaded within roughly 64–128 m of
 you, and the server only sends records within about ±160 m. A pen on the other side of the

@@ -13,41 +13,73 @@ namespace NearbyPanel;
 internal static class InputGate
 {
     /// <summary>
+    /// Whether an IMGUI control held keyboard focus the last time any OnGUI ran.
+    ///
+    /// <c>GUIUtility.keyboardControl</c> is only meaningful inside OnGUI; read from
+    /// Update it returns whatever was left over, which is not a reliable answer and
+    /// can block the hotkey forever. So it is sampled where it is valid and read
+    /// where it is needed.
+    /// </summary>
+    private static bool _imguiHasFocus;
+
+    /// <summary>Call once at the top of OnGUI, before any early return.</summary>
+    public static void SampleGuiFocus() => _imguiHasFocus = GUIUtility.keyboardControl != 0;
+
+    /// <summary>
     /// True when a keypress should be treated as a command to this mod rather than
     /// text the player is entering or a menu they are driving.
     /// </summary>
-    public static bool AcceptsHotkey()
+    public static bool AcceptsHotkey() => Blocker() == null;
+
+    /// <summary>
+    /// Which check, if any, is currently swallowing the hotkey. Returns null when
+    /// the press should be accepted. Exposed so a rejected press can say why
+    /// instead of vanishing — a hotkey that silently does nothing is otherwise
+    /// indistinguishable from a mod that failed to load.
+    /// </summary>
+    public static string? Blocker()
     {
         if (!Player.m_localPlayerExists || Player.m_localPlayer == null)
         {
-            return false;
+            return "no local player";
         }
 
         if (Chat.instance != null && Chat.instance.HasFocus())
         {
-            return false;
+            return "chat has focus";
         }
 
-        if (Console.IsVisible() || TextInput.IsVisible())
+        if (Console.IsVisible())
         {
-            return false;
+            return "console is open";
         }
 
-        if (Menu.IsVisible() || InventoryGui.IsVisible())
+        if (TextInput.IsVisible())
         {
-            return false;
+            return "a text prompt is open";
         }
 
-        // Any IMGUI text field anywhere has keyboard focus — most usefully the
-        // search box of an in-game configuration manager, which is IMGUI and which
-        // none of the checks above can see.
-        if (GUIUtility.keyboardControl != 0)
+        if (Menu.IsVisible())
         {
-            return false;
+            return "the menu is open";
         }
 
-        // Placing a building piece swallows most input; leave it alone.
-        return !Player.m_localPlayer.InPlaceMode();
+        if (InventoryGui.IsVisible())
+        {
+            return "the inventory is open";
+        }
+
+        if (_imguiHasFocus)
+        {
+            return "an IMGUI text field has focus";
+        }
+
+        if (Player.m_localPlayer.InPlaceMode())
+        {
+            return "placing a building piece";
+        }
+
+        return null;
     }
 
     /// <summary>

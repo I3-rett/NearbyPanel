@@ -1,6 +1,6 @@
 # ADR 0003 — Radius and filters are constants, not settings
 
-**Status:** accepted
+**Status:** accepted for the radius; the filter half is superseded by [ADR 0007](0007-list-all-creatures.md)
 
 ## Context
 

@@ -46,7 +46,38 @@ public static class NearbyList
 
     /// <summary>
     /// Creatures carrying a tameable component — which includes the ones you have
-    /// already tamed, so your own pets appear in the list too. The default view.
+    /// already tamed, so your own pets appear in the list.
     /// </summary>
     public static bool IsTameable(NearbyEntity entity) => entity.Kind == EntityKind.Tameable;
+
+    /// <summary>
+    /// Everything except other players. Creatures are the point; the position and
+    /// distance of the people you play with is the part deliberately left out.
+    /// </summary>
+    public static bool IsCreature(NearbyEntity entity) => entity.Kind != EntityKind.Player;
+
+    /// <summary>
+    /// Whether <paramref name="entity"/> matches a free-text filter, compared
+    /// case-insensitively against its name. An empty or whitespace filter matches
+    /// everything, so clearing it restores the full list rather than emptying it.
+    /// </summary>
+    public static bool MatchesText(NearbyEntity entity, string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return true;
+        }
+
+        string needle = text!.Trim();
+        string name = entity.Name ?? string.Empty;
+
+        return name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    /// <summary>
+    /// The predicate the panel and the console dump both use: creatures only, and
+    /// matching the current text filter.
+    /// </summary>
+    public static Func<NearbyEntity, bool> Filter(string? text) =>
+        entity => IsCreature(entity) && MatchesText(entity, text);
 }

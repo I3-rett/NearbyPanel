@@ -63,6 +63,13 @@ public sealed class Plugin : BaseUnityPlugin
             false,
             "Whether the panel is already showing when you load into a world.");
 
+        FilterState.Bind(Config.Bind(
+            "General",
+            "Name filter",
+            string.Empty,
+            "Only list creatures whose name contains this text, case-insensitively. "
+            + "Empty lists everything. Also settable in game with: nearby_filter <text>"));
+
         _maxVisibleRows = Config.Bind(
             "Panel",
             "Visible rows",
@@ -101,9 +108,10 @@ public sealed class Plugin : BaseUnityPlugin
 
         _open = _openOnStart.Value;
 
-        // Constructing the command registers it with the terminal, which keeps its
+        // Constructing a command registers it with the terminal, which keeps its
         // own static table, so this is safe to do before any world is loaded.
         DumpCommand.Register(_scanner);
+        FilterCommand.Register();
 
         Log.LogInfo(PluginInfo.Name + " " + PluginInfo.Version + " loaded (client-side only).");
     }
@@ -124,10 +132,21 @@ public sealed class Plugin : BaseUnityPlugin
             return;
         }
 
-        if (_toggleKey.Value.IsDown() && InputGate.AcceptsHotkey())
+        if (_toggleKey.Value.IsDown())
         {
-            _open = !_open;
-            _sinceRefresh = RefreshSeconds; // refresh on the frame it opens
+            string? blocked = InputGate.Blocker();
+            if (blocked == null)
+            {
+                _open = !_open;
+                _sinceRefresh = RefreshSeconds; // refresh on the frame it opens
+                Log.LogInfo("Panel " + (_open ? "opened" : "closed") + ".");
+            }
+            else
+            {
+                // A hotkey that silently does nothing is indistinguishable from a
+                // mod that failed to load, so say which check swallowed it.
+                Log.LogInfo("Toggle key ignored: " + blocked + ".");
+            }
         }
 
         // Nothing is scanned while the panel is closed: no work, no allocation.
@@ -150,7 +169,7 @@ public sealed class Plugin : BaseUnityPlugin
     {
         try
         {
-            IReadOnlyList<NearbyEntity> entities = _scanner.Scan(NearbyList.IsTameable);
+            IReadOnlyList<NearbyEntity> entities = _scanner.Scan(FilterState.Predicate());
 
             _rows.Clear();
             foreach (NearbyEntity entity in entities)
@@ -160,9 +179,10 @@ public sealed class Plugin : BaseUnityPlugin
 
             // Built once per refresh rather than per OnGUI call, of which there are
             // at least two a frame.
+            string scope = Tuning.RadiusLabel + " m" + FilterState.Describe();
             _title = _rows.Count == 0
-                ? "Nearby — nothing within " + Tuning.RadiusLabel + " m"
-                : "Nearby — " + _rows.Count + " within " + Tuning.RadiusLabel + " m";
+                ? "Nearby — nothing within " + scope
+                : "Nearby — " + _rows.Count + " within " + scope;
 
             if (_scanner.Faulted)
             {
@@ -180,6 +200,10 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void OnGUI()
     {
+        // Sampled here because GUIUtility.keyboardControl only means anything
+        // inside OnGUI. Must run before any early return.
+        InputGate.SampleGuiFocus();
+
         if (!Enabled.Value || !_open || !InputGate.ShouldDraw())
         {
             return;
