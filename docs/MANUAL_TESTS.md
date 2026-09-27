@@ -33,6 +33,13 @@ working, with no exception in the log.
 - [ ] Walking towards a creature: it appears and its distance decreases smoothly
 - [ ] Walking away past the radius: it disappears
 - [ ] Rotating on the spot: DIR changes and F really is straight ahead, R really is right
+- [x] Compass format matches the map — north really is +Z, which the code assumed and
+      nothing had confirmed (single-player, 2026-09-27; the answer does not depend on mode)
+- [x] `!you` appears when a creature is hunting you — **single-player only so far**, where
+      this client owns every creature and the check cannot fail. The case that matters is a
+      dedicated server, where the creature is simulated by the server or another player and
+      its target is not replicated at all. Until that is seen, assume the column may stay
+      silent in multiplayer
 - [ ] A creature standing level with you reads `0`, not `+1` (feet vs collider centre)
 - [ ] A creature clearly above or below: the altitude column carries the right sign
 - [ ] Standing in a busy area (40+ creatures): no visible frame drop, list capped as configured
