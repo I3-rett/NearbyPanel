@@ -39,12 +39,13 @@ public class RowCellsTests
     }
 
     [Fact]
-    public void Direction_is_relative_to_where_the_viewer_faces()
+    public void Direction_defaults_to_degrees_from_where_the_viewer_faces()
     {
+        // The default format; the three modes are covered in DirectionFormatTests.
         NearbyEntity due_north = new("N", EntityKind.Creature, new Vec3(0f, 0f, 10f), 1, null, null);
 
-        Assert.Equal("F", CellsFor(due_north).Direction);
-        Assert.Equal("L", CellsFor(due_north, East).Direction);
+        Assert.Equal("0°", CellsFor(due_north).Direction);
+        Assert.Equal("-90°", CellsFor(due_north, East).Direction);
     }
 
     [Fact]

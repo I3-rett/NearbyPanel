@@ -83,6 +83,83 @@ public static class Geometry
         };
     }
 
+    /// <summary>
+    /// The world compass bearing from <paramref name="from"/> to
+    /// <paramref name="to"/>, in degrees clockwise from north, within [0, 360).
+    ///
+    /// North is +Z in Valheim, which is the convention the map uses.
+    /// </summary>
+    public static float CompassBearing(Vec3 from, Vec3 to)
+    {
+        float dx = to.X - from.X;
+        float dz = to.Z - from.Z;
+        if (dx == 0f && dz == 0f)
+        {
+            return 0f;
+        }
+
+        double degrees = Math.Atan2(dx, dz) * 180.0 / Math.PI;
+        if (degrees < 0.0)
+        {
+            degrees += 360.0;
+        }
+
+        return (float)degrees;
+    }
+
+    /// <summary>
+    /// A world compass bearing as one of eight points. Unlike
+    /// <see cref="RelativeHeading"/> this does not move when you turn.
+    /// </summary>
+    public static string CompassPoint(float compassBearing)
+    {
+        double bearing = compassBearing % 360.0;
+        if (bearing < 0.0)
+        {
+            bearing += 360.0;
+        }
+
+        int sector = (int)Math.Floor((bearing / 45.0) + 0.5) % 8;
+        return sector switch
+        {
+            0 => "N",
+            1 => "NE",
+            2 => "E",
+            3 => "SE",
+            4 => "S",
+            5 => "SW",
+            6 => "W",
+            _ => "NW",
+        };
+    }
+
+    /// <summary>
+    /// A relative bearing written in degrees: <c>0°</c> ahead, <c>90°</c> to the
+    /// right, <c>-90°</c> to the left, <c>180°</c> behind. The sign carries the
+    /// side, so there is no need for a separate left/right marker.
+    /// </summary>
+    public static string DegreesLabel(float relativeBearing)
+    {
+        if (float.IsNaN(relativeBearing) || float.IsInfinity(relativeBearing))
+        {
+            return "?";
+        }
+
+        double degrees = Normalise(relativeBearing);
+
+        // Round half away from zero so -0.5 does not print as "0" on one side and
+        // "-1" on the other.
+        int whole = (int)(degrees < 0 ? Math.Ceiling(degrees - 0.5) : Math.Floor(degrees + 0.5));
+
+        // Directly behind is 180, never -180, matching RelativeBearing.
+        if (whole == -180)
+        {
+            whole = 180;
+        }
+
+        return whole.ToString(System.Globalization.CultureInfo.InvariantCulture) + "°";
+    }
+
     /// <summary>Folds any angle in degrees into (-180, 180].</summary>
     private static double Normalise(double degrees)
     {

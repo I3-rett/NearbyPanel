@@ -11,6 +11,10 @@ namespace NearbyPanel;
 ///
 /// Cells are positioned at fixed pixel offsets rather than padded with spaces,
 /// because Unity's built-in GUI font is proportional.
+///
+/// Legibility over a moving game world needs more than default labels: a solid
+/// backing, a bright text colour, a shadow so pale text survives a snowfield, and
+/// alternating row tints so the eye can track a row across six columns.
 /// </summary>
 internal sealed class PanelView
 {
@@ -18,19 +22,29 @@ internal sealed class PanelView
 
     /// <summary>
     /// Left edge of each column as a fraction of the inner width, plus a final 1.0
-    /// so the last column has a right edge. NAME and STATUS carry the long text and
-    /// get a third of the width each; the four numeric columns share the middle.
+    /// so the last column has a right edge. NAME and STATUS carry the long text; the
+    /// four numeric columns are kept narrow and sit together in the middle.
     /// </summary>
-    private static readonly float[] ColumnEdges = { 0.00f, 0.34f, 0.46f, 0.55f, 0.63f, 0.68f, 1.00f };
+    private static readonly float[] ColumnEdges = { 0.00f, 0.32f, 0.45f, 0.56f, 0.64f, 0.70f, 1.00f };
+
+    private static readonly Color Background = new(0.07f, 0.06f, 0.05f, 0.88f);
+    private static readonly Color RowTint = new(1f, 1f, 1f, 0.045f);
+    private static readonly Color Rule = new(0.85f, 0.76f, 0.56f, 0.35f);
+    private static readonly Color TextColour = new(0.93f, 0.90f, 0.83f, 1f);
+    private static readonly Color HeaderColour = new(0.85f, 0.73f, 0.47f, 1f);
+    private static readonly Color TitleColour = new(1f, 0.95f, 0.85f, 1f);
+    private static readonly Color TamingColour = new(1f, 0.72f, 0.36f, 1f);
 
     // Reused every draw: OnGUI runs at least twice a frame, and allocating a fresh
     // array per row per call is pure garbage.
     private readonly string[] _values = new string[6];
 
+    private Texture2D? _pixel;
     private GUIStyle? _rowStyle;
     private GUIStyle? _rowStyleRight;
+    private GUIStyle? _tamingStyle;
     private GUIStyle? _headerStyle;
-    private GUIStyle? _boxStyle;
+    private GUIStyle? _titleStyle;
     private int _styleFontSize = -1;
 
     public void Draw(
@@ -49,20 +63,28 @@ internal sealed class PanelView
         bool truncated = rows.Count > shown;
 
         Rect panel = new(placement.X, placement.Y, placement.Width, placement.Height);
-        GUI.Box(panel, GUIContent.none, _boxStyle);
+        Fill(panel, Background);
 
         float y = panel.y + Padding;
         float innerWidth = placement.Width - (Padding * 2f);
         float x = panel.x + Padding;
 
-        GUI.Label(new Rect(x, y, innerWidth, rowHeight), title, _headerStyle);
+        GUI.Label(new Rect(x, y, innerWidth, rowHeight), title, _titleStyle);
         y += rowHeight;
 
-        DrawCells(x, y, innerWidth, rowHeight, RowFormatter.ColumnNames, header: true);
+        DrawCells(x, y, innerWidth, rowHeight, RowFormatter.ColumnNames, _headerStyle!, null);
         y += rowHeight;
+
+        // A hairline under the headings, so the table reads as a table.
+        Fill(new Rect(x, y - 1f, innerWidth, 1f), Rule);
 
         for (int i = 0; i < shown; i++)
         {
+            if (i % 2 == 1)
+            {
+                Fill(new Rect(panel.x + 2f, y, placement.Width - 4f, rowHeight), RowTint);
+            }
+
             RowCells cells = rows[i];
             _values[0] = cells.Name;
             _values[1] = cells.Distance;
@@ -71,7 +93,11 @@ internal sealed class PanelView
             _values[4] = cells.Level;
             _values[5] = cells.Status;
 
-            DrawCells(x, y, innerWidth, rowHeight, _values, header: false);
+            // Taming progress is the thing worth spotting at a glance, so the
+            // status cell is tinted for an animal being tamed.
+            GUIStyle? statusStyle = cells.Taming ? _tamingStyle : null;
+
+            DrawCells(x, y, innerWidth, rowHeight, _values, _rowStyle!, statusStyle);
             y += rowHeight;
         }
 
@@ -80,25 +106,73 @@ internal sealed class PanelView
             GUI.Label(
                 new Rect(x, y, innerWidth, rowHeight),
                 "+" + (rows.Count - shown) + " more",
-                _rowStyle);
+                _headerStyle);
         }
     }
 
-    private void DrawCells(float x, float y, float width, float rowHeight, string[] values, bool header)
+    /// <param name="lastColumnStyle">Overrides the style of the STATUS cell when set.</param>
+    private void DrawCells(
+        float x,
+        float y,
+        float width,
+        float rowHeight,
+        string[] values,
+        GUIStyle normal,
+        GUIStyle? lastColumnStyle)
     {
         bool[] rightAligned = RowFormatter.ColumnRightAligned;
+        bool isHeader = ReferenceEquals(normal, _headerStyle);
 
         for (int column = 0; column < values.Length && column + 1 < ColumnEdges.Length; column++)
         {
             float left = x + (ColumnEdges[column] * width);
             float right = x + (ColumnEdges[column + 1] * width);
 
-            GUIStyle style = header
-                ? _headerStyle!
-                : column < rightAligned.Length && rightAligned[column] ? _rowStyleRight! : _rowStyle!;
+            GUIStyle style = normal;
+
+            if (!isHeader)
+            {
+                if (column == values.Length - 1 && lastColumnStyle != null)
+                {
+                    style = lastColumnStyle;
+                }
+                else if (column < rightAligned.Length && rightAligned[column])
+                {
+                    style = _rowStyleRight!;
+                }
+            }
+
+            // Numeric columns are right-aligned in the header too, so a heading sits
+            // over its own values rather than beside them.
+            if (isHeader && column < rightAligned.Length && rightAligned[column])
+            {
+                style = _headerStyleRight!;
+            }
 
             GUI.Label(new Rect(left, y, right - left, rowHeight), values[column], style);
         }
+    }
+
+    private GUIStyle? _headerStyleRight;
+
+    private void Fill(Rect rect, Color colour)
+    {
+        if (_pixel == null)
+        {
+            // One white pixel, tinted per call. Cheaper and more predictable than
+            // the game's skin, which is built for wood panels rather than tables.
+            _pixel = new Texture2D(1, 1, TextureFormat.RGBA32, mipChain: false)
+            {
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            _pixel.SetPixel(0, 0, Color.white);
+            _pixel.Apply();
+        }
+
+        Color previous = GUI.color;
+        GUI.color = colour;
+        GUI.DrawTexture(rect, _pixel);
+        GUI.color = previous;
     }
 
     private void EnsureStyles(int fontSize)
@@ -116,19 +190,24 @@ internal sealed class PanelView
             alignment = TextAnchor.MiddleLeft,
             clipping = TextClipping.Clip,
             wordWrap = false,
+            richText = false,
         };
+        _rowStyle.normal.textColor = TextColour;
 
-        // Numbers read better flush right, and it matches the console dump.
-        _rowStyleRight = new GUIStyle(_rowStyle)
-        {
-            alignment = TextAnchor.MiddleRight,
-        };
+        // A little breathing room so text does not touch a column edge.
+        _rowStyle.padding = new RectOffset(3, 3, 0, 0);
 
-        _headerStyle = new GUIStyle(_rowStyle)
-        {
-            fontStyle = FontStyle.Bold,
-        };
+        _rowStyleRight = new GUIStyle(_rowStyle) { alignment = TextAnchor.MiddleRight };
 
-        _boxStyle = new GUIStyle(GUI.skin.box);
+        _tamingStyle = new GUIStyle(_rowStyle);
+        _tamingStyle.normal.textColor = TamingColour;
+
+        _headerStyle = new GUIStyle(_rowStyle) { fontStyle = FontStyle.Bold };
+        _headerStyle.normal.textColor = HeaderColour;
+
+        _headerStyleRight = new GUIStyle(_headerStyle) { alignment = TextAnchor.MiddleRight };
+
+        _titleStyle = new GUIStyle(_rowStyle) { fontStyle = FontStyle.Bold };
+        _titleStyle.normal.textColor = TitleColour;
     }
 }

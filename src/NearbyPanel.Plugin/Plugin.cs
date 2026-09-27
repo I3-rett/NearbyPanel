@@ -23,9 +23,14 @@ public sealed class Plugin : BaseUnityPlugin
 
     internal static ConfigEntry<bool> Enabled = null!;
 
+    /// <summary>The DIR format the panel is using, so the dump matches it.</summary>
+    internal static DirectionFormat DirectionFormat =>
+        _directionFormat == null ? Core.DirectionFormat.Degrees : _directionFormat.Value;
+
     private static ConfigEntry<KeyboardShortcut> _toggleKey = null!;
     private static ConfigEntry<bool> _openOnStart = null!;
     private static ConfigEntry<PanelAnchor> _anchor = null!;
+    private static ConfigEntry<DirectionFormat> _directionFormat = null!;
     private static ConfigEntry<int> _maxVisibleRows = null!;
     private static ConfigEntry<int> _fontSize = null!;
     private static ConfigEntry<float> _panelWidth = null!;
@@ -84,6 +89,18 @@ public sealed class Plugin : BaseUnityPlugin
                 "Whether the panel is already showing when you load into a world.",
                 null,
                 new ConfigurationManagerAttributes { Order = 70 }));
+
+        _directionFormat = Config.Bind(
+            "Panel",
+            "Direction format",
+            DirectionFormat.Degrees,
+            new ConfigDescription(
+                "How the DIR column reads. Degrees: angle from where you are looking, "
+                + "0 ahead, 90 right, -90 left, 180 behind. Relative: the same as letters, "
+                + "F ahead, R right, B behind. Compass: world direction, N NE E SE S SW W NW, "
+                + "which does not change as you turn.",
+                null,
+                new ConfigurationManagerAttributes { Order = 95 }));
 
         _anchor = Config.Bind(
             "Panel",
@@ -208,7 +225,8 @@ public sealed class Plugin : BaseUnityPlugin
             _rows.Clear();
             foreach (NearbyEntity entity in entities)
             {
-                _rows.Add(RowFormatter.Cells(entity, _scanner.Viewer, _scanner.Forward));
+                _rows.Add(RowFormatter.Cells(
+                    entity, _scanner.Viewer, _scanner.Forward, _directionFormat.Value));
             }
 
             // Built once per refresh rather than per OnGUI call, of which there are

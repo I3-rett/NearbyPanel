@@ -23,7 +23,8 @@ public static class RowFormatter
     {
         new("NAME", 20, RightAligned: false),
         new("DIST", 6, RightAligned: true),
-        new("DIR", 4, RightAligned: false),
+        // 5 wide because "-135°" is the longest the degrees format produces.
+        new("DIR", 5, RightAligned: true),
         new("ALT", 4, RightAligned: true),
         new("★", 3, RightAligned: true),
         new("STATUS", 0, RightAligned: false),
@@ -38,11 +39,15 @@ public static class RowFormatter
     /// <summary>The heading line for the fixed-width layout.</summary>
     public static string Header => Compose(Layout.Select(c => c.Name).ToArray());
 
-    public static RowCells Cells(NearbyEntity entity, Vec3 viewer, Vec3 forward)
+    public static RowCells Cells(
+        NearbyEntity entity,
+        Vec3 viewer,
+        Vec3 forward,
+        DirectionFormat format = DirectionFormat.Degrees)
     {
         float distance = Geometry.GroundDistance(viewer, entity.Position);
         float altitude = Geometry.HeightDelta(viewer, entity.Position);
-        string direction = Geometry.RelativeHeading(Geometry.RelativeBearing(viewer, forward, entity.Position));
+        string direction = Direction(entity, viewer, forward, format);
 
         string status = entity.Status ?? string.Empty;
         if (entity.TamingProgress is { } progress)
@@ -57,13 +62,33 @@ public static class RowFormatter
             Direction: direction,
             Altitude: Format(altitude, "+0;-0;0"),
             Level: Stars(entity.Level),
-            Status: status);
+            Status: status,
+            Taming: entity.TamingProgress.HasValue);
+    }
+
+    /// <summary>How the DIR cell reads, for the chosen format.</summary>
+    private static string Direction(NearbyEntity entity, Vec3 viewer, Vec3 forward, DirectionFormat format)
+    {
+        if (format == DirectionFormat.Compass)
+        {
+            return Geometry.CompassPoint(Geometry.CompassBearing(viewer, entity.Position));
+        }
+
+        float bearing = Geometry.RelativeBearing(viewer, forward, entity.Position);
+
+        return format == DirectionFormat.Relative
+            ? Geometry.RelativeHeading(bearing)
+            : Geometry.DegreesLabel(bearing);
     }
 
     /// <summary>The fixed-width form, for the console and the log.</summary>
-    public static string Row(NearbyEntity entity, Vec3 viewer, Vec3 forward)
+    public static string Row(
+        NearbyEntity entity,
+        Vec3 viewer,
+        Vec3 forward,
+        DirectionFormat format = DirectionFormat.Degrees)
     {
-        RowCells cells = Cells(entity, viewer, forward);
+        RowCells cells = Cells(entity, viewer, forward, format);
 
         return Compose(new[]
         {

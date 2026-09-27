@@ -48,7 +48,7 @@ internal static class DumpCommand
 
         foreach (NearbyEntity entity in rows)
         {
-            Write(args, RowFormatter.Row(entity, scanner.Viewer, scanner.Forward));
+            Write(args, RowFormatter.Row(entity, scanner.Viewer, scanner.Forward, Plugin.DirectionFormat));
         }
     }
 
