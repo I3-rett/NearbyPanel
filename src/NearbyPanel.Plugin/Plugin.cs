@@ -133,7 +133,7 @@ public sealed class Plugin : BaseUnityPlugin
         _panelWidth = Config.Bind(
             "Panel",
             "Width",
-            460f,
+            700f,
             new ConfigDescription(
                 "Panel width in pixels.",
                 new AcceptableValueRange<float>(240f, 1200f),
@@ -151,7 +151,7 @@ public sealed class Plugin : BaseUnityPlugin
         _fontSize = Config.Bind(
             "Panel",
             "Font size",
-            14,
+            20,
             new ConfigDescription(
                 "Text size in the panel.",
                 new AcceptableValueRange<int>(8, 32),
