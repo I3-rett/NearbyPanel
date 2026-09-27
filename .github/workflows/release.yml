@@ -30,15 +30,21 @@ jobs:
       - name: Check the tag agrees with the source
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}" -replace '^v', ''
-          if (-not $tag) { $tag = (Get-Content package/manifest.json | ConvertFrom-Json).version_number }
-
           $plugin = (Select-String -Path src/NearbyPanel.Plugin/PluginInfo.cs -Pattern 'Version\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value
           $manifest = (Get-Content package/manifest.json -Raw | ConvertFrom-Json).version_number
+          $toml = (Select-String -Path thunderstore.toml -Pattern 'versionNumber\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value
 
-          "tag: $tag | PluginInfo: $plugin | manifest: $manifest"
+          "PluginInfo: $plugin | manifest: $manifest | thunderstore.toml: $toml"
           if ($plugin -ne $manifest) { throw "PluginInfo.cs and manifest.json disagree" }
-          if ($tag -ne $plugin) { throw "tag $tag does not match version $plugin" }
+          if ($plugin -ne $toml) { throw "PluginInfo.cs and thunderstore.toml disagree" }
+
+          # Only a tagged run has a tag to agree with. A manual run publishes
+          # whatever the source currently says.
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $tag = "${{ github.ref_name }}" -replace '^v', ''
+            "tag: $tag"
+            if ($tag -ne $plugin) { throw "tag $tag does not match version $plugin" }
+          }
 
           "VERSION=$plugin" | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -101,10 +107,16 @@ jobs:
           awk '/^## /{ if (seen) exit; seen=1 } seen' package/CHANGELOG.md > release-notes.md
           cat release-notes.md
 
-          gh release create "${{ github.ref_name }}" "$ZIP" \
-            --title "NearbyPanel $VERSION" \
-            --notes-file release-notes.md \
-            --verify-tag
+          # Tolerant of a re-run: a failure further down should not make the
+          # whole job unrepeatable.
+          if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release upload "${{ github.ref_name }}" "$ZIP" --clobber
+          else
+            gh release create "${{ github.ref_name }}" "$ZIP" \
+              --title "NearbyPanel $VERSION" \
+              --notes-file release-notes.md \
+              --verify-tag
+          fi
 
       # Skipped unless the token is configured, so a tag never fails for want of
       # a secret. A published version cannot be replaced or deleted, so this step
@@ -116,13 +128,12 @@ jobs:
         shell: bash
         run: |
           dotnet tool install -g tcli
-          tcli publish \
-            --file "$ZIP" \
-            --token "$THUNDERSTORE_TOKEN" \
-            --package-namespace I3_rett \
-            --package-name NearbyPanel \
-            --package-version "$VERSION" \
-            --repository https://thunderstore.io
+
+          # --file refuses to sit alongside --package-name, --package-namespace
+          # and --package-version: with a prebuilt archive, tcli takes the
+          # identity from thunderstore.toml instead. The version check above
+          # keeps that file in step with the manifest inside the archive.
+          tcli publish --file "$ZIP" --token "$THUNDERSTORE_TOKEN"
 
       - uses: actions/upload-artifact@v4
         with:

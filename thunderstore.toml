@@ -1,0 +1,27 @@
+# Read by tcli when publishing a prebuilt archive: --file cannot be combined
+# with the identity flags, so the namespace, name and version come from here.
+# versionNumber must match PluginInfo.cs and package/manifest.json; the release
+# workflow refuses to publish if they disagree.
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "I3_rett"
+name = "NearbyPanel"
+versionNumber = "1.0.0"
+description = "Lists the creatures near you with distance, direction and taming progress. Client-side only."
+websiteUrl = "https://github.com/I3-rett/NearbyPanel"
+containsNsfwContent = false
+
+[build]
+icon = "./package/icon.png"
+readme = "./package/README.md"
+outdir = "./build/out"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["valheim"]
+
+[publish.categories]
+valheim = ["client-side", "tools"]
