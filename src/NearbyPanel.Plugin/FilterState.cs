@@ -10,8 +10,8 @@ namespace NearbyPanel;
 /// in an in-game manager is picked up immediately.
 ///
 /// There is no text box in the panel on purpose — it takes no clicks and never
-/// grabs keyboard focus (ADR 0005), so the filter is set from the console or the
-/// config instead.
+/// grabs keyboard focus, so the filter is set from the console or the config
+/// instead.
 /// </summary>
 internal static class FilterState
 {

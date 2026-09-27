@@ -6,8 +6,9 @@ namespace NearbyPanel;
 
 /// <summary>
 /// Draws the list with legacy IMGUI. Read-only and inert: it never takes a click,
-/// never grabs the cursor and is not draggable — see
-/// docs/adr/0005-read-only-hud-no-mouse.md.
+/// never grabs the cursor and is not draggable. Dragging and wheel scrolling both
+/// mean taking the cursor from the game and handing it back correctly on every
+/// exit path, which is a large amount of fragile code for a list of a dozen rows.
 ///
 /// Cells are positioned at fixed pixel offsets rather than padded with spaces,
 /// because Unity's built-in GUI font is proportional.

@@ -5,7 +5,7 @@ namespace NearbyPanel;
 /// the dump both apply, or clears it when given nothing.
 ///
 /// The console is the input surface because the panel itself is inert — it takes
-/// no clicks and never takes keyboard focus (ADR 0005), so it has nowhere to type.
+/// no clicks and never takes keyboard focus, so it has nowhere to type.
 /// The filter is also an ordinary config entry, so an in-game configuration manager
 /// can set it too.
 /// </summary>

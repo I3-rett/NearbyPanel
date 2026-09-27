@@ -68,8 +68,9 @@ The game's own hover text is the reference. Pick three creatures and compare.
       the localization path works and other languages get their own wording
 - [x] **The boundary check, which is the strongest one available:** the percentage reached
       100% at the exact moment the animal became tamed (lox, 2026-09-27). Reading the
-      record raw is therefore correct, and confirms ADR 0006 — the interpolator that was
-      removed would have shown 100% up to three seconds early.
+      record raw is therefore correct: an earlier version smoothed the figure between
+      the owner's three-second writes, and would have shown 100% up to three seconds
+      early.
 - [ ] Mid-range: percentage matches the vanilla hover text on the same animal
 - [ ] `nearby_dump` in the console writes the same rows the panel shows
 

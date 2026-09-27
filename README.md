@@ -25,9 +25,9 @@ Press **N** to show and hide it.
 **What it is, plainly.** It lists every creature within 50 m, so it is a short-range
 creature radar: it sees things through trees and fog that you could not see yourself. That
 was a deliberate choice, taken with the objection on the table — see
-[ADR 0007](docs/adr/0007-list-all-creatures.md). Two limits are not configurable: the
-**radius is a 50 m constant** in the source ([ADR 0003](docs/adr/0003-fixed-radius-and-filters.md)),
-and **other players are never listed**. A free-text filter narrows the list by name when it
+a deliberate choice. Two limits are not configurable: the **radius is a 50 m constant**
+in the source, because a limit that can be slid is not a limit, and **other players are
+never listed**. A free-text filter narrows the list by name when it
 gets busy: `nearby_filter boar` in the console, or the `Name filter` setting.
 
 **A limit worth knowing.** Valheim only keeps entities loaded within roughly 64–128 m of
@@ -111,7 +111,7 @@ Two kinds of test, both in `tests/NearbyPanel.Tests`:
 **Unit tests** over `NearbyPanel.Core`. Core targets netstandard2.0 and cannot reference
 UnityEngine or BepInEx, which is what makes it testable at all — the geometry, the
 ordering and tie-breaking, the radius cut-off, the filters and the row formatting are all
-pure functions over plain data. See [ADR 0004](docs/adr/0004-core-plugin-split.md).
+pure functions over plain data.
 
 **API guard tests** over the installed game assembly. The plugin binds to Valheim by name
 at runtime, so when Iron Gate renames or hides a member, nothing fails at build time — you
@@ -152,7 +152,8 @@ against the game's own hover text.
 
 The console command `nearby_dump` writes the current list to `LogOutput.log` using the same
 formatter as the panel, so the log is a diffable record of what the panel showed. It
-applies the same filter as the panel, deliberately — see ADR 0003.
+applies the same filter as the panel, deliberately: there is no argument that widens
+the view beyond what is already on screen.
 
 ### Fast iteration
 
@@ -173,9 +174,6 @@ walked in game — not when the code compiles.
 - **Read [`CONTEXT.md`](CONTEXT.md) first.** It defines the vocabulary the code uses (ZDO,
   ZDO owner, zone, simulation distance, alerted vs aware) with the values verified against
   a specific game version. Guessing at these is how subtle bugs get in.
-- **Decisions that constrain later work go in an ADR** under [`docs/adr/`](docs/adr/), with
-  the context that made the decision reasonable. Five exist; read them before arguing with
-  the architecture.
 - **Keep game types out of Core.** The netstandard2.0 target enforces it, so if you find
   yourself wanting a `UnityEngine.Vector3` in there, the conversion belongs at the adapter
   boundary instead.

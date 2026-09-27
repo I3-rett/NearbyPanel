@@ -6,7 +6,7 @@ namespace NearbyPanel;
 /// <summary>
 /// The boundary between the game and <see cref="NearbyPanel.Core"/>. Everything
 /// that knows about Valheim types stops here; everything past it works on
-/// <see cref="NearbyEntity"/>. See docs/adr/0004-core-plugin-split.md.
+/// <see cref="NearbyEntity"/>, which can be tested without a running game.
 /// </summary>
 internal static class EntityMapper
 {
