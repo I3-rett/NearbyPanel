@@ -1,0 +1,14 @@
+# Line endings are decided here rather than by whoever cloned the repository.
+# Without this, core.autocrlf governs, which differs between machines and makes
+# git report changes to files nobody edited.
+#
+# LF in the repository and LF in the working tree. Visual Studio, MSBuild and
+# PowerShell all read LF happily on Windows; only .bat and .cmd genuinely need
+# CRLF, and there are none here.
+* text=auto eol=lf
+
+# Never converted, never diffed as text.
+*.png binary
+*.dll binary
+*.pdb binary
+*.zip binary
