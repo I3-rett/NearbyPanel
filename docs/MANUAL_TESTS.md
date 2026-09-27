@@ -4,22 +4,23 @@ Everything that touches Unity, the network or a live world is verified here rath
 in `dotnet test`. Work through the whole list before tagging a release, and note the
 game version you tested against.
 
-Tested against Valheim ____________ on ____________ by ____________
+Tested against Valheim 1.0.16 on 2026-09-27 (first pass; unticked boxes are genuinely
+unverified)
 
 ## Loading
 
-- [ ] `LogOutput.log` contains `NearbyPanel <version> loaded (client-side only).`
-- [ ] No exception anywhere in the log during startup
-- [ ] `BepInEx/config/siam.NearbyPanel.cfg` is created on first run
-- [ ] The mod's settings appear in the ConfigurationManager window (F1)
+- [x] `LogOutput.log` contains `NearbyPanel <version> loaded (client-side only).`
+- [x] No exception anywhere in the log during startup
+- [x] `BepInEx/config/siam.NearbyPanel.cfg` is created on first run
+- [x] The mod's settings appear in the ConfigurationManager window (F1)
 
 ## Scene transitions
 
 These are where a panel parented to the wrong object dies. Each step must leave the panel
 working, with no exception in the log.
 
-- [ ] Main menu before any world is loaded — toggle key does nothing, no exception
-- [ ] Enter a world, open the panel
+- [x] Main menu before any world is loaded — toggle key does nothing, no exception
+- [x] Enter a world, open the panel
 - [ ] Die, watch the death screen, respawn
 - [ ] Log out to the main menu and back into the world
 - [ ] Alt-tab away and back
@@ -83,8 +84,8 @@ The game's own hover text is the reference. Pick three creatures and compare.
 
 The point of the mod being client-only. Run these against the shared server.
 
-- [ ] Joining the server succeeds with the mod installed and the server without it
-- [ ] No `ErrorVersion`, no "not installed on the server" in the log
+- [x] Joining the server succeeds with the mod installed and the server without it
+- [x] No `ErrorVersion`, no "not installed on the server" in the log
 - [ ] Another player without the mod is unaffected and sees nothing unusual
 - [ ] Nothing is written to any ZDO: leave the panel open for ten minutes, then confirm
       tamed animals and the world are unchanged after a server restart
