@@ -11,7 +11,7 @@ unverified)
 
 - [x] `LogOutput.log` contains `NearbyPanel <version> loaded (client-side only).`
 - [x] No exception anywhere in the log during startup
-- [x] `BepInEx/config/mindless.NearbyPanel.cfg` is created on first run
+- [x] `BepInEx/config/I3_rett.NearbyPanel.cfg` is created on first run
 - [x] The mod's settings appear in the ConfigurationManager window (F1)
 
 ## Scene transitions

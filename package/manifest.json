@@ -1,6 +1,6 @@
 {
   "name": "NearbyPanel",
-  "author": "mindless",
+  "author": "I3_rett",
   "version_number": "0.4.0",
   "website_url": "https://github.com/I3-rett/NearbyPanel",
   "description": "Lists the creatures near you with distance, direction and taming progress. Client-side only.",

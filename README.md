@@ -48,7 +48,7 @@ Not yet published. Once there is a release:
 in no version handshake, so it neither requires the server to have it nor prevents you
 joining one that does not. Other players are unaffected and see nothing different.
 
-Settings live in `BepInEx/config/mindless.NearbyPanel.cfg`, or in the in-game configuration
+Settings live in `BepInEx/config/I3_rett.NearbyPanel.cfg`, or in the in-game configuration
 manager if you have one installed: toggle key, panel position and width, visible rows and
 font size.
 
