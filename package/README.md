@@ -1,68 +1,60 @@
 # NearbyPanel
 
-Press **N** for a list of the creatures near you — nearest first, with distance,
-direction, altitude, star rating, and live taming progress for animals you are taming.
+Lists the creatures around you — how far, which way, how high, how many stars, what they
+have noticed, and how far along any animal you are taming is. Press **N**.
 
-## Client-side only
+**Client-side only. The server does not need it, and it will not stop you joining a server
+that does not have it.** Players without the mod are unaffected and see nothing different.
 
-Install it on your own game. It does not need to be on the server, it does not stop you
-joining a server that does not have it, and other players are unaffected. It reads state
-your client already holds, registers no RPC and writes nothing.
+## Features
 
-## What it shows
+- Every creature within 50 m, nearest first, refreshed four times a second
+- Distance along the ground, so it is the number you actually walk
+- Direction in one of three formats: degrees from where you are looking (0 ahead, 180
+  behind), relative letters, or world compass points that do not turn when you do
+- Star rating, and altitude relative to you
+- What each creature has noticed: nothing, something, or you specifically when the game
+  can confirm it
+- A red row for anything hostile that has been alerted — the deathsquito you did not see
+  take aggro
+- Live taming progress, read from the same record the game uses, so an animal a friend is
+  taming reports its progress too, along with whether it is hungry or frightened
+- Filter the list by name with `nearby_filter boar`, or clear it with `nearby_filter`
+- `nearby_dump` writes the current list to the log, which is useful in a bug report
+- Other players are never listed
 
-| Column | |
-|---|---|
-| NAME | the creature, or its given name if you have named it |
-| DIST | ground distance in metres, height ignored |
-| DIR | heading **relative to the way you are facing**: F ahead, R right, B behind, L left, and the diagonals |
-| ALT | how far above or below you it is |
-| ★ | star rating, `-` for an ordinary creature |
-| STATUS | for tameable animals: the taming percentage and the game's own wording — hungry, frightened, in progress, happy |
+The panel takes no clicks and never touches your cursor, so it cannot interfere with the
+game.
 
-Taming progress comes from the same record the game uses, so an animal a friend is taming
-shows its progress too. It is reported exactly as stored, with no smoothing — at normal
-taming durations the whole-percent figure moves every fifteen seconds or so.
+## Scope
 
-## Filtering
+It lists every creature within 50 m, which means it shows you things through trees and
+fog that you could not see yourself. Decide whether that suits the people you play with.
 
-The list shows every creature in range, which in a forest is a lot. Narrow it by name:
+Two limits are fixed in the source rather than left as settings: the **50 m radius**,
+because reach is what separates this from surveillance and a limit you can slide is not a
+limit, and **other players are never listed**. The game only keeps creatures loaded within
+roughly 64-128 m of you, so nothing beyond that is visible to any client-side mod anyway.
 
-```
-nearby_filter boar     in the console
-nearby_filter          with no argument, to clear it
-```
+## Configuration
 
-It matches anywhere in the name and ignores case, and it works on the given names of your
-tamed animals too. The same value is the `Name filter` setting, so an in-game
-configuration manager can set it as well.
+A config file is generated on first launch at `BepInEx/config/I3_rett.NearbyPanel.cfg`.
+Edit it with a text editor, or in game with Configuration Manager. The settings most
+people want are the toggle key, the screen corner the panel is pinned to, and the
+direction format.
 
-`nearby_dump` writes the current list to the log with the same filter and formatting as
-the panel — handy for reporting a problem.
+## Compatibility
 
-## Scope, stated plainly
+- No Harmony patches, no RPC, and nothing is ever written to the world, so removing the
+  mod cannot damage a save
+- Running `nearby_dump` does not mark your character as having used cheats
+- Tested against Valheim 1.0.16 with BepInEx 5.4.2351
 
-This lists every creature within 50 m, so it is a short-range creature radar: it shows you
-things through trees and fog that you could not see yourself. Decide for yourself whether
-that suits the group you play with.
+## Installation
 
-Two things are fixed in the source and cannot be widened from the config:
+A mod manager does this for you. Manually: extract `NearbyPanel.dll` and
+`NearbyPanel.Core.dll` into `BepInEx/plugins/NearbyPanel/`.
 
-- **The radius is 50 m.** Reach is what separates this from surveillance.
-- **Other players are never listed.** Their position through walls is the part that
-  affects someone other than you.
+## Source
 
-The game only keeps entities loaded within roughly 64–128 m of you, so nothing beyond that
-is visible to any client-side mod anyway.
-
-## Settings
-
-Toggle key, name filter, panel position and width, visible rows and font size, in
-`BepInEx/config/I3_rett.NearbyPanel.cfg`.
-
-The panel is deliberately inert: it takes no clicks and never grabs your cursor, so it
-cannot interfere with the game. Move it with the margin settings rather than by dragging.
-
-## Source and licence
-
-MIT. Code, issues and the full design notes: https://github.com/I3-rett/NearbyPanel
+MIT licensed. Code and issues: https://github.com/I3-rett/NearbyPanel
