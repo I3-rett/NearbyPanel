@@ -119,9 +119,9 @@ public class RowFormatterTests
         string row = RowFormatter.Row(entity, Viewer, North);
         int[] offsets = RowFormatter.ColumnOffsets();
 
-        // NAME is left-aligned at offset 0, STATUS is the last column.
+        // NAME is left-aligned at offset 0; STATUS is the last column, index 6.
         Assert.StartsWith("Boar", row);
-        Assert.Equal("42% Hungry", row.Substring(offsets[5]));
+        Assert.Equal("42% Hungry", row.Substring(offsets[offsets.Length - 1]));
     }
 
     [Fact]

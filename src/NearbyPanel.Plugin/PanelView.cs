@@ -13,8 +13,9 @@ namespace NearbyPanel;
 /// because Unity's built-in GUI font is proportional.
 ///
 /// Legibility over a moving game world needs more than default labels: a solid
-/// backing, a bright text colour, a shadow so pale text survives a snowfield, and
-/// alternating row tints so the eye can track a row across six columns.
+/// backing, a bright text colour, alternating row tints so the eye can follow one
+/// row across seven columns, and a red band on any hostile creature that has
+/// noticed something — the row you want to catch without reading the table.
 /// </summary>
 internal sealed class PanelView
 {
@@ -25,7 +26,8 @@ internal sealed class PanelView
     /// so the last column has a right edge. NAME and STATUS carry the long text; the
     /// four numeric columns are kept narrow and sit together in the middle.
     /// </summary>
-    private static readonly float[] ColumnEdges = { 0.00f, 0.32f, 0.45f, 0.56f, 0.64f, 0.70f, 1.00f };
+    private static readonly float[] ColumnEdges =
+        { 0.00f, 0.30f, 0.42f, 0.53f, 0.61f, 0.67f, 0.75f, 1.00f };
 
     private static readonly Color Background = new(0.07f, 0.06f, 0.05f, 0.88f);
     private static readonly Color RowTint = new(1f, 1f, 1f, 0.045f);
@@ -34,15 +36,18 @@ internal sealed class PanelView
     private static readonly Color HeaderColour = new(0.85f, 0.73f, 0.47f, 1f);
     private static readonly Color TitleColour = new(1f, 0.95f, 0.85f, 1f);
     private static readonly Color TamingColour = new(1f, 0.72f, 0.36f, 1f);
+    private static readonly Color ThreatTint = new(0.75f, 0.13f, 0.11f, 0.26f);
+    private static readonly Color ThreatColour = new(1f, 0.55f, 0.48f, 1f);
 
     // Reused every draw: OnGUI runs at least twice a frame, and allocating a fresh
     // array per row per call is pure garbage.
-    private readonly string[] _values = new string[6];
+    private readonly string[] _values = new string[7];
 
     private Texture2D? _pixel;
     private GUIStyle? _rowStyle;
     private GUIStyle? _rowStyleRight;
     private GUIStyle? _tamingStyle;
+    private GUIStyle? _threatStyle;
     private GUIStyle? _headerStyle;
     private GUIStyle? _titleStyle;
     private int _styleFontSize = -1;
@@ -80,24 +85,32 @@ internal sealed class PanelView
 
         for (int i = 0; i < shown; i++)
         {
-            if (i % 2 == 1)
+            RowCells cells = rows[i];
+
+            // A hostile creature that has noticed something gets a red band: this is
+            // the row you want to catch without reading the table.
+            if (cells.Threat)
+            {
+                Fill(new Rect(panel.x + 2f, y, placement.Width - 4f, rowHeight), ThreatTint);
+            }
+            else if (i % 2 == 1)
             {
                 Fill(new Rect(panel.x + 2f, y, placement.Width - 4f, rowHeight), RowTint);
             }
 
-            RowCells cells = rows[i];
             _values[0] = cells.Name;
             _values[1] = cells.Distance;
             _values[2] = cells.Direction;
             _values[3] = cells.Altitude;
             _values[4] = cells.Level;
-            _values[5] = cells.Status;
+            _values[5] = cells.Awareness;
+            _values[6] = cells.Status;
 
             // Taming progress is the thing worth spotting at a glance, so the
             // status cell is tinted for an animal being tamed.
-            GUIStyle? statusStyle = cells.Taming ? _tamingStyle : null;
+            GUIStyle? statusStyle = cells.Taming ? _tamingStyle : cells.Threat ? _threatStyle : null;
 
-            DrawCells(x, y, innerWidth, rowHeight, _values, _rowStyle!, statusStyle);
+            DrawCells(x, y, innerWidth, rowHeight, _values, cells.Threat ? _threatStyle! : _rowStyle!, statusStyle);
             y += rowHeight;
         }
 
@@ -201,6 +214,9 @@ internal sealed class PanelView
 
         _tamingStyle = new GUIStyle(_rowStyle);
         _tamingStyle.normal.textColor = TamingColour;
+
+        _threatStyle = new GUIStyle(_rowStyle);
+        _threatStyle.normal.textColor = ThreatColour;
 
         _headerStyle = new GUIStyle(_rowStyle) { fontStyle = FontStyle.Bold };
         _headerStyle.normal.textColor = HeaderColour;

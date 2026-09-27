@@ -21,12 +21,13 @@ public static class RowFormatter
     /// </summary>
     private static readonly Column[] Layout =
     {
-        new("NAME", 20, RightAligned: false),
+        new("NAME", 18, RightAligned: false),
         new("DIST", 6, RightAligned: true),
         // 5 wide because "-135°" is the longest the degrees format produces.
         new("DIR", 5, RightAligned: true),
         new("ALT", 4, RightAligned: true),
-        new("★", 3, RightAligned: true),
+        new("★", 2, RightAligned: true),
+        new("AI", 4, RightAligned: false),
         new("STATUS", 0, RightAligned: false),
     };
 
@@ -56,14 +57,24 @@ public static class RowFormatter
             status = status.Length == 0 ? percent : percent + " " + status;
         }
 
+        if (status.Length == 0 && entity.Hostile)
+        {
+            // Non-tameables have nothing else to put here, and "would attack me"
+            // is not always obvious from the name: an aggravated dvergr looks the
+            // same as a neutral one.
+            status = "hostile";
+        }
+
         return new RowCells(
             Name: entity.Name ?? string.Empty,
             Distance: Format(distance, "0.0"),
             Direction: direction,
             Altitude: Format(altitude, "+0;-0;0"),
             Level: Stars(entity.Level),
+            Awareness: AwarenessLabel(entity),
             Status: status,
-            Taming: entity.TamingProgress.HasValue);
+            Taming: entity.TamingProgress.HasValue,
+            Threat: entity.Hostile && entity.Awareness == Core.Awareness.Alerted);
     }
 
     /// <summary>How the DIR cell reads, for the chosen format.</summary>
@@ -97,9 +108,23 @@ public static class RowFormatter
             cells.Direction,
             cells.Altitude,
             cells.Level,
+            cells.Awareness,
             cells.Status,
         });
     }
+
+    /// <summary>
+    /// The AI column. "!you" only when the game can actually say so: a creature's
+    /// target is held by the peer simulating it, so for anything owned by the
+    /// server or another player the answer is unknown, and unknown is shown as a
+    /// plain alert rather than as safety.
+    /// </summary>
+    public static string AwarenessLabel(NearbyEntity entity) => entity.Awareness switch
+    {
+        Core.Awareness.Alerted => entity.TargetsYou == true ? "!you" : "!",
+        Core.Awareness.Tracking => "?",
+        _ => "-",
+    };
 
     /// <summary>
     /// Star rating, which is the creature's level minus one — vanilla stores an

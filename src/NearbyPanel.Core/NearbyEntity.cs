@@ -7,10 +7,22 @@ namespace NearbyPanel.Core;
 /// (for tameables, the game's own $hud_tame* wording).
 /// </summary>
 /// <param name="TamingProgress">0..1 while taming is under way, null otherwise.</param>
+/// <param name="Awareness">Whether it has noticed anything. Replicated, so always readable.</param>
+/// <param name="Hostile">Whether it would attack you, from factions and aggravation.</param>
+/// <param name="TargetsYou">
+/// True when it is known to be targeting you, false when it is known not to be, and
+/// <c>null</c> when it cannot be known — a creature's target is held only by the peer
+/// simulating it, so one owned by the server or another player cannot answer. Null
+/// must be shown as "unknown", never as "no": telling someone nothing is hunting them
+/// when something might be is the worst failure this panel has.
+/// </param>
 public sealed record NearbyEntity(
     string Name,
     EntityKind Kind,
     Vec3 Position,
     int Level,
     string? Status,
-    float? TamingProgress);
+    float? TamingProgress,
+    Awareness Awareness = Awareness.Calm,
+    bool Hostile = false,
+    bool? TargetsYou = null);

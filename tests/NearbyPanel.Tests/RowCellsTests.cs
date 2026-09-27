@@ -106,8 +106,15 @@ public class RowCellsTests
     {
         // PanelView builds its values array in this order; if the two drift the
         // panel silently draws the level under ALT.
-        Assert.Equal(6, RowFormatter.ColumnNames.Length);
-        Assert.Equal(6, RowFormatter.ColumnRightAligned.Length);
-        Assert.Equal(6, RowFormatter.ColumnOffsets().Length);
+        int columns = RowFormatter.ColumnNames.Length;
+
+        Assert.Equal(columns, RowFormatter.ColumnRightAligned.Length);
+        Assert.Equal(columns, RowFormatter.ColumnOffsets().Length);
+
+        // PanelView fills a fixed array in this order; if a column is added there
+        // and not here, the panel draws a value under the wrong heading.
+        Assert.Equal(
+            new[] { "NAME", "DIST", "DIR", "ALT", "★", "AI", "STATUS" },
+            RowFormatter.ColumnNames);
     }
 }

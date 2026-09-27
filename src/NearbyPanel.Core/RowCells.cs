@@ -15,11 +15,18 @@ namespace NearbyPanel.Core;
 /// than left for the panel to infer from the text, so highlighting it does not
 /// depend on searching the status string for a percent sign.
 /// </param>
+/// <param name="Awareness">The AI column: calm, tracking, alerted, or alerted at you.</param>
+/// <param name="Threat">
+/// Whether this row deserves a warning tint: hostile to you *and* alerted. Carried
+/// as a flag so the panel does not have to re-derive it from text.
+/// </param>
 public sealed record RowCells(
     string Name,
     string Distance,
     string Direction,
     string Altitude,
     string Level,
+    string Awareness,
     string Status,
-    bool Taming = false);
+    bool Taming = false,
+    bool Threat = false);
