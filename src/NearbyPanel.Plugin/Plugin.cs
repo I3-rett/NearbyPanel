@@ -25,6 +25,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     private static ConfigEntry<KeyboardShortcut> _toggleKey = null!;
     private static ConfigEntry<bool> _openOnStart = null!;
+    private static ConfigEntry<PanelAnchor> _anchor = null!;
     private static ConfigEntry<int> _maxVisibleRows = null!;
     private static ConfigEntry<int> _fontSize = null!;
     private static ConfigEntry<float> _panelWidth = null!;
@@ -44,31 +45,82 @@ public sealed class Plugin : BaseUnityPlugin
     {
         Log = Logger;
 
+        // Order counts down so a configuration manager lists these the way they are
+        // written here rather than alphabetically.
         Enabled = Config.Bind(
             "General",
             "Enabled",
             true,
-            "Master switch. Turning this off hides the panel and stops the scan.");
+            new ConfigDescription(
+                "Master switch. Turning this off hides the panel and stops the scan.",
+                null,
+                new ConfigurationManagerAttributes { Order = 100 }));
 
         _toggleKey = Config.Bind(
             "General",
             "Toggle key",
             new KeyboardShortcut(KeyCode.N),
-            "Shows and hides the panel. Ignored while typing in chat or the console. "
-            + "Note that a shortcut with no modifier will not fire while a modifier is held.");
-
-        _openOnStart = Config.Bind(
-            "General",
-            "Open on start",
-            false,
-            "Whether the panel is already showing when you load into a world.");
+            new ConfigDescription(
+                "Shows and hides the panel. Ignored while typing in chat or the console. "
+                + "A shortcut with no modifier will not fire while a modifier is held.",
+                null,
+                new ConfigurationManagerAttributes { Order = 90 }));
 
         FilterState.Bind(Config.Bind(
             "General",
             "Name filter",
             string.Empty,
-            "Only list creatures whose name contains this text, case-insensitively. "
-            + "Empty lists everything. Also settable in game with: nearby_filter <text>"));
+            new ConfigDescription(
+                "Only list creatures whose name contains this text, case-insensitively. "
+                + "Empty lists everything. Also settable in game with: nearby_filter <text>",
+                null,
+                new ConfigurationManagerAttributes { Order = 80 })));
+
+        _openOnStart = Config.Bind(
+            "General",
+            "Open on start",
+            false,
+            new ConfigDescription(
+                "Whether the panel is already showing when you load into a world.",
+                null,
+                new ConfigurationManagerAttributes { Order = 70 }));
+
+        _anchor = Config.Bind(
+            "Panel",
+            "Anchor",
+            PanelAnchor.TopLeft,
+            new ConfigDescription(
+                "Which corner of the screen the panel is pinned to. The margins below are "
+                + "measured from that corner.",
+                null,
+                new ConfigurationManagerAttributes { Order = 100 }));
+
+        _marginX = Config.Bind(
+            "Panel",
+            "Margin X",
+            12f,
+            new ConfigDescription(
+                "Horizontal distance from the anchored corner, in pixels.",
+                new AcceptableValueRange<float>(0f, 600f),
+                new ConfigurationManagerAttributes { Order = 90 }));
+
+        _marginY = Config.Bind(
+            "Panel",
+            "Margin Y",
+            120f,
+            new ConfigDescription(
+                "Vertical distance from the anchored corner, in pixels.",
+                new AcceptableValueRange<float>(0f, 600f),
+                new ConfigurationManagerAttributes { Order = 80 }));
+
+        _panelWidth = Config.Bind(
+            "Panel",
+            "Width",
+            460f,
+            new ConfigDescription(
+                "Panel width in pixels.",
+                new AcceptableValueRange<float>(240f, 1200f),
+                new ConfigurationManagerAttributes { Order = 70 }));
 
         _maxVisibleRows = Config.Bind(
             "Panel",
@@ -76,35 +128,17 @@ public sealed class Plugin : BaseUnityPlugin
             12,
             new ConfigDescription(
                 "Rows drawn before the list is cut short with a count of the rest.",
-                new AcceptableValueRange<int>(1, Tuning.MaxRows)));
+                new AcceptableValueRange<int>(1, Tuning.MaxRows),
+                new ConfigurationManagerAttributes { Order = 60 }));
 
         _fontSize = Config.Bind(
             "Panel",
             "Font size",
             14,
-            new ConfigDescription("Text size in the panel.", new AcceptableValueRange<int>(8, 32)));
-
-        _panelWidth = Config.Bind(
-            "Panel",
-            "Width",
-            460f,
-            new ConfigDescription("Panel width in pixels.", new AcceptableValueRange<float>(240f, 1200f)));
-
-        _marginX = Config.Bind(
-            "Panel",
-            "Margin X",
-            12f,
             new ConfigDescription(
-                "Distance from the left edge of the screen, in pixels.",
-                new AcceptableValueRange<float>(0f, 4000f)));
-
-        _marginY = Config.Bind(
-            "Panel",
-            "Margin Y",
-            120f,
-            new ConfigDescription(
-                "Distance from the top edge of the screen, in pixels.",
-                new AcceptableValueRange<float>(0f, 4000f)));
+                "Text size in the panel.",
+                new AcceptableValueRange<int>(8, 32),
+                new ConfigurationManagerAttributes { Order = 50 }));
 
         _open = _openOnStart.Value;
 
@@ -209,18 +243,15 @@ public sealed class Plugin : BaseUnityPlugin
             return;
         }
 
-        // Clamped so a stray config value cannot park the panel off-screen with no
-        // way to bring it back without editing the file.
-        float width = Mathf.Min(_panelWidth.Value, Screen.width - 16f);
-        float x = Mathf.Clamp(_marginX.Value, 0f, Mathf.Max(0f, Screen.width - width));
-        float y = Mathf.Clamp(_marginY.Value, 0f, Mathf.Max(0f, Screen.height - 64f));
+        PanelRect placement = PanelLayout.Place(
+            _anchor.Value,
+            _marginX.Value,
+            _marginY.Value,
+            _panelWidth.Value,
+            PanelLayout.Height(_rows.Count, _maxVisibleRows.Value, _fontSize.Value),
+            Screen.width,
+            Screen.height);
 
-        _view.Draw(
-            _rows,
-            new Vector2(x, y),
-            width,
-            _maxVisibleRows.Value,
-            _fontSize.Value,
-            _title);
+        _view.Draw(_rows, placement, _maxVisibleRows.Value, _fontSize.Value, _title);
     }
 }

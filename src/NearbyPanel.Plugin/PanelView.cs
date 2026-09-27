@@ -14,7 +14,7 @@ namespace NearbyPanel;
 /// </summary>
 internal sealed class PanelView
 {
-    private const float Padding = 8f;
+    private const float Padding = PanelLayout.Padding;
 
     /// <summary>
     /// Left edge of each column as a fraction of the inner width, plus a final 1.0
@@ -35,29 +35,24 @@ internal sealed class PanelView
 
     public void Draw(
         IReadOnlyList<RowCells> rows,
-        Vector2 anchor,
-        float width,
+        PanelRect placement,
         int maxVisibleRows,
         int fontSize,
         string title)
     {
         EnsureStyles(fontSize);
 
-        // Rows must grow with the text, or a large font overlaps and clips.
-        float rowHeight = Mathf.Max(14f, fontSize * 1.35f);
-
-        int shown = Mathf.Min(rows.Count, maxVisibleRows);
+        // Sizing and placement live in Core so they can be tested; this method only
+        // draws what they decided.
+        float rowHeight = PanelLayout.RowHeight(fontSize);
+        int shown = PanelLayout.VisibleRows(rows.Count, maxVisibleRows);
         bool truncated = rows.Count > shown;
 
-        // title + header + rows (+ a line saying how many were hidden)
-        float lines = 2f + shown + (truncated ? 1f : 0f);
-        float height = (Padding * 2f) + (lines * rowHeight);
-
-        Rect panel = new(anchor.x, anchor.y, width, height);
+        Rect panel = new(placement.X, placement.Y, placement.Width, placement.Height);
         GUI.Box(panel, GUIContent.none, _boxStyle);
 
         float y = panel.y + Padding;
-        float innerWidth = width - (Padding * 2f);
+        float innerWidth = placement.Width - (Padding * 2f);
         float x = panel.x + Padding;
 
         GUI.Label(new Rect(x, y, innerWidth, rowHeight), title, _headerStyle);
