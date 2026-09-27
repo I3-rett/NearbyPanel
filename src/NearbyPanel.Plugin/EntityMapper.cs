@@ -156,6 +156,12 @@ internal static class EntityMapper
     /// anything owned by the server or another player there is nothing to read.
     /// Null is deliberately not false: reporting "not hunting you" when the truth is
     /// unknown is the one error here that could get someone killed.
+    ///
+    /// In practice this resolves for most creatures on a dedicated server too: a
+    /// client generally owns the ones loaded around it. That was an open question
+    /// when this was written - the column looked like it might stay silent in
+    /// multiplayer - and it turned out unfounded. It is not a guarantee, only the
+    /// common case, which is exactly why null still means unknown.
     /// </summary>
     private static bool? TargetsLocalPlayer(Character character, BaseAI? ai)
     {
