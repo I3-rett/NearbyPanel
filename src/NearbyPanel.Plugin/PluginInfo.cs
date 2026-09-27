@@ -6,7 +6,7 @@ namespace NearbyPanel;
 /// </summary>
 internal static class PluginInfo
 {
-    public const string Guid = "siam.NearbyPanel";
+    public const string Guid = "mindless.NearbyPanel";
     public const string Name = "NearbyPanel";
     public const string Version = "0.4.0";
 }

@@ -58,7 +58,7 @@ is visible to any client-side mod anyway.
 ## Settings
 
 Toggle key, name filter, panel position and width, visible rows and font size, in
-`BepInEx/config/siam.NearbyPanel.cfg`.
+`BepInEx/config/mindless.NearbyPanel.cfg`.
 
 The panel is deliberately inert: it takes no clicks and never grabs your cursor, so it
 cannot interfere with the game. Move it with the margin settings rather than by dragging.

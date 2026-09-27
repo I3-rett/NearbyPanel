@@ -1,5 +1,6 @@
 {
   "name": "NearbyPanel",
+  "author": "mindless",
   "version_number": "0.4.0",
   "website_url": "",
   "description": "Lists the creatures near you with distance, direction and taming progress. Client-side only.",
