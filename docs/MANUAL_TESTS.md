@@ -19,10 +19,12 @@ unverified)
 These are where a panel parented to the wrong object dies. Each step must leave the panel
 working, with no exception in the log.
 
-- [x] Main menu before any world is loaded — toggle key does nothing, no exception
+- [x] Main menu before any world is loaded — toggle key does nothing, and says why:
+      `Toggle key ignored: no local player.`
 - [x] Enter a world, open the panel
-- [ ] Die, watch the death screen, respawn
-- [ ] Log out to the main menu and back into the world
+- [x] Die, watch the death screen, respawn — log shows `Local player destroyed`, no exception
+- [x] Log out to the main menu and back into the world — `ZNet Shutdown` then `Loading main
+      scene`, and the panel toggles again afterwards
 - [ ] Alt-tab away and back
 
 ## The list
