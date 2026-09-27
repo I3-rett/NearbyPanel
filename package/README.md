@@ -52,8 +52,9 @@ direction format.
 
 ## Installation
 
-A mod manager does this for you. Manually: extract `NearbyPanel.dll` and
-`NearbyPanel.Core.dll` into `BepInEx/plugins/NearbyPanel/`.
+A mod manager does this for you. Manually: install BepInExPack Valheim, then extract
+`NearbyPanel.dll` and `NearbyPanel.Core.dll` into `BepInEx/plugins/NearbyPanel/`. The
+archive is also attached to each release on GitHub.
 
 ## Source
 

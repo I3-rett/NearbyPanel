@@ -1,5 +1,6 @@
 # NearbyPanel
 
+[![Thunderstore](https://img.shields.io/badge/Thunderstore-NearbyPanel-2f4f8f)](https://thunderstore.io/c/valheim/p/I3_rett/NearbyPanel/)
 [![CI](https://github.com/I3-rett/NearbyPanel/actions/workflows/ci.yml/badge.svg)](https://github.com/I3-rett/NearbyPanel/actions/workflows/ci.yml)
 [![Licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 [![Valheim](https://img.shields.io/badge/Valheim-1.0.16-orange)](https://www.valheim.com/)
@@ -23,6 +24,26 @@ and adds what else is nearby and whether any of it has noticed you.
 The list covers every creature within 50 m, so it sees through trees and fog. Two limits
 are constants in the source rather than settings: the radius, because a limit you can slide
 is not a limit, and the exclusion of other players.
+
+## Installing
+
+**With a mod manager.** Search for **NearbyPanel** in r2modman, Gale or the Thunderstore
+app and install it. BepInEx comes with it.
+
+[thunderstore.io/c/valheim/p/I3_rett/NearbyPanel](https://thunderstore.io/c/valheim/p/I3_rett/NearbyPanel/)
+
+**By hand.** Install
+[BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
+first, then take the zip from the
+[latest release](https://github.com/I3-rett/NearbyPanel/releases/latest) and extract
+`NearbyPanel.dll` and `NearbyPanel.Core.dll` into `BepInEx/plugins/NearbyPanel/`.
+
+Either way, `LogOutput.log` should contain
+`NearbyPanel <version> loaded (client-side only).` once the game starts. Settings appear on
+first launch at `BepInEx/config/I3_rett.NearbyPanel.cfg`, and in Configuration Manager if
+you have it.
+
+Nothing to do on the server.
 
 ## Building
 
