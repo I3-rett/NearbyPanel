@@ -43,6 +43,11 @@ internal sealed class PanelView
     // array per row per call is pure garbage.
     private readonly string[] _values = new string[7];
 
+    // Cached because RowFormatter builds these arrays on every call and DrawCells
+    // runs once per row, twice a frame: that was ~1500 throwaway arrays a second.
+    private static readonly string[] Headings = RowFormatter.ColumnNames;
+    private static readonly bool[] RightAligned = RowFormatter.ColumnRightAligned;
+
     private Texture2D? _pixel;
     private GUIStyle? _rowStyle;
     private GUIStyle? _rowStyleRight;
@@ -77,7 +82,7 @@ internal sealed class PanelView
         GUI.Label(new Rect(x, y, innerWidth, rowHeight), title, _titleStyle);
         y += rowHeight;
 
-        DrawCells(x, y, innerWidth, rowHeight, RowFormatter.ColumnNames, _headerStyle!, null);
+        DrawCells(x, y, innerWidth, rowHeight, Headings, _headerStyle!, null);
         y += rowHeight;
 
         // A hairline under the headings, so the table reads as a table.
@@ -133,7 +138,7 @@ internal sealed class PanelView
         GUIStyle normal,
         GUIStyle? lastColumnStyle)
     {
-        bool[] rightAligned = RowFormatter.ColumnRightAligned;
+        bool[] rightAligned = RightAligned;
         bool isHeader = ReferenceEquals(normal, _headerStyle);
 
         for (int column = 0; column < values.Length && column + 1 < ColumnEdges.Length; column++)

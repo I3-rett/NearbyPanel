@@ -55,23 +55,26 @@ The game's own hover text is the reference. Pick three creatures and compare.
 
 - [ ] Name in the panel matches the vanilla hover name
 - [ ] Star level matches the stars on the health bar
-- [ ] For a tameable: status wording matches the vanilla hover text (frightened, hungry,
-      happy, in progress)
-- [ ] For an animal being tamed: percentage matches the vanilla hover percentage, allowing
-      for the 3 s write interval
+- [x] For a tameable: status wording is the game's own ("Acclimatizing" seen in game), so
+      the localization path works and other languages get their own wording
+- [x] **The boundary check, which is the strongest one available:** the percentage reached
+      100% at the exact moment the animal became tamed (lox, 2026-09-27). Reading the
+      record raw is therefore correct, and confirms ADR 0006 — the interpolator that was
+      removed would have shown 100% up to three seconds early.
+- [ ] Mid-range: percentage matches the vanilla hover text on the same animal
 - [ ] `nearby_dump` in the console writes the same rows the panel shows
 
 ## Taming, in a pen
 
 - [ ] A boar that has not eaten shows no percentage (vanilla shows "wild")
-- [ ] Once it eats, a percentage appears and climbs
+- [x] Once it eats, a percentage appears and climbs
 - [ ] Aggro it: status becomes frightened and the percentage stops climbing
 - [ ] Let it calm down: the percentage resumes
 - [ ] An animal being tamed by another player shows progress too
 
 ## Input
 
-- [ ] Toggle key opens and closes the panel
+- [x] Toggle key opens and closes the panel
 - [ ] Pressing the toggle key while the chat box has focus types the character and does
       **not** toggle the panel
 - [ ] Same with the console open
