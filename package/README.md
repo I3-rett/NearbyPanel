@@ -6,6 +6,10 @@ have noticed, and how far along any animal you are taming is. Press **N**.
 **Client-side only. The server does not need it, and it will not stop you joining a server
 that does not have it.** Players without the mod are unaffected and see nothing different.
 
+![Lox calves growing under a tower, each with its growth percentage](https://raw.githubusercontent.com/I3-rett/NearbyPanel/main/docs/images/lox-pen.jpg)
+
+![A boar pen at night: piglets growing, the parents, and a greyling further out](https://raw.githubusercontent.com/I3-rett/NearbyPanel/main/docs/images/boar-pen.jpg)
+
 ## Features
 
 - Every creature within 50 m, nearest first, refreshed four times a second
