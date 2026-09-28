@@ -180,9 +180,16 @@ public static class RowFormatter
 
             if (breeding.PartnerPregnant)
             {
-                return breeding.PartnerPregnancySecondsLeft is not { } left ? "Partner pregnant"
-                    : left <= 0f ? "Partner pregnant, due"
-                    : "Partner pregnant · " + Duration(left);
+                if (breeding.PartnerPregnancySecondsLeft is not { } left
+                    || breeding.PartnerPregnancyProgress is not { } progress)
+                {
+                    return "Partner pregnant";
+                }
+
+                // Read like every other progress in the column, per Progress format.
+                return left <= 0f
+                    ? "Partner pregnant, due"
+                    : "Partner pregnant " + Progress(Percent(progress), Duration(left), format);
             }
 
             return "No partner";

@@ -285,7 +285,23 @@ public class BreedingTests
 
         BreedingRules.Resolve(found);
 
-        Assert.Equal("Partner pregnant · 45 s", RowFormatter.StatusText(found[0]));
+        Assert.Equal("Partner pregnant 25%", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
+    public void A_pregnant_partner_follows_the_progress_format()
+    {
+        // Same reading as every other percentage in the column.
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules()),
+            Animal(Boar, 2f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: 45f)),
+        };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("Partner pregnant 45 s", RowFormatter.StatusText(found[0], ProgressFormat.Time));
+        Assert.Equal("Partner pregnant 25% · 45 s", RowFormatter.StatusText(found[0], ProgressFormat.Both));
     }
 
     [Fact]
@@ -300,7 +316,7 @@ public class BreedingTests
 
         BreedingRules.Resolve(found);
 
-        Assert.Equal("Partner pregnant · 20 s", RowFormatter.StatusText(found[0]));
+        Assert.Equal("Partner pregnant 66% · 20 s", RowFormatter.StatusText(found[0], ProgressFormat.Both));
     }
 
     [Fact]

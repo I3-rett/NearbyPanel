@@ -25,6 +25,7 @@ namespace NearbyPanel.Core;
 /// <param name="PartnerHungry">A partner in reach is not ready only because it is hungry: feed it.</param>
 /// <param name="PartnerPregnant">A partner in reach is not ready only because it is pregnant: wait.</param>
 /// <param name="PartnerPregnancySecondsLeft">Until the soonest of those gives birth, when known.</param>
+/// <param name="PartnerPregnancyProgress">How far along that same pregnancy is, 0..1.</param>
 public sealed record Breeding(
     int LovePoints,
     int RequiredLovePoints,
@@ -45,7 +46,8 @@ public sealed record Breeding(
     float? NearestCrowderDistance = null,
     bool PartnerHungry = false,
     bool PartnerPregnant = false,
-    float? PartnerPregnancySecondsLeft = null)
+    float? PartnerPregnancySecondsLeft = null,
+    float? PartnerPregnancyProgress = null)
 {
     /// <summary>0..1 of the way to term, or null when not pregnant or unknown.</summary>
     public float? PregnancyProgress =>
@@ -122,6 +124,7 @@ public static class BreedingRules
             bool partnerHungry = false;
             bool partnerPregnant = false;
             float? partnerLeft = null;
+            float? partnerProgress = null;
 
             foreach (NearbyEntity other in found)
             {
@@ -148,6 +151,7 @@ public static class BreedingRules
                         if (theirs.PregnancySecondsLeft is { } left && (partnerLeft == null || left < partnerLeft))
                         {
                             partnerLeft = left;
+                            partnerProgress = theirs.PregnancyProgress;
                         }
                     }
                     else if (theirs.Hungry)
@@ -181,6 +185,7 @@ public static class BreedingRules
                     PartnerHungry = partnerHungry,
                     PartnerPregnant = partnerPregnant,
                     PartnerPregnancySecondsLeft = partnerLeft,
+                    PartnerPregnancyProgress = partnerProgress,
                 },
             };
         }
