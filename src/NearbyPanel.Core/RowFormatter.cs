@@ -46,7 +46,8 @@ public static class RowFormatter
         NearbyEntity entity,
         Vec3 viewer,
         Vec3 forward,
-        DirectionFormat format = DirectionFormat.Degrees)
+        DirectionFormat format = DirectionFormat.Degrees,
+        ProgressFormat progress = ProgressFormat.Percent)
     {
         float distance = Geometry.GroundDistance(viewer, entity.Position);
         float altitude = Geometry.HeightDelta(viewer, entity.Position);
@@ -59,7 +60,7 @@ public static class RowFormatter
             Altitude: Format(altitude, "+0;-0;0"),
             Level: Stars(entity.Level),
             Awareness: AwarenessLabel(entity),
-            Status: StatusText(entity),
+            Status: StatusText(entity, progress),
             Progress: HasProgress(entity),
             Threat: entity.Hostile && entity.Awareness == Core.Awareness.Alerted);
     }
@@ -73,13 +74,18 @@ public static class RowFormatter
     /// that is not yet tamed, so growth surfaces exactly when taming has finished
     /// and there is nothing else to wait for.
     /// </summary>
-    public static string StatusText(NearbyEntity entity)
+    public static string StatusText(NearbyEntity entity, ProgressFormat format = ProgressFormat.Percent)
     {
         string status = entity.Status ?? string.Empty;
 
         if (entity.TamingProgress is { } taming)
         {
-            string percent = Percent(taming);
+            // "fed" because the game only runs the taming timer while the animal
+            // has eaten: this is feeding time still owed, not a time of day.
+            string percent = Progress(
+                Percent(taming),
+                entity.TamingSecondsLeft is { } left ? Duration(left) + " fed" : null,
+                format);
             return status.Length == 0 ? percent : percent + " " + status;
         }
 
@@ -90,7 +96,15 @@ public static class RowFormatter
             // is this mod's. The game's word still follows it, separated rather than
             // run together, because "hungry" matters in a breeding pen and reading
             // "62% grown Hungry" as one phrase is worse than reading two.
-            string percent = Percent(growth) + " grown";
+            string grown = Percent(growth) + " grown";
+            string percent = entity.GrowthSecondsLeft is { } left
+                ? format switch
+                {
+                    ProgressFormat.Time => "grown in " + Duration(left),
+                    ProgressFormat.Both => grown + " · " + Duration(left),
+                    _ => grown,
+                }
+                : grown;
             return status.Length == 0 ? percent : percent + ", " + status;
         }
 
@@ -112,6 +126,52 @@ public static class RowFormatter
     /// </summary>
     public static bool HasProgress(NearbyEntity entity) =>
         entity.TamingProgress.HasValue || entity.GrowthProgress.HasValue;
+
+    /// <summary>
+    /// Percent, time, or both, as chosen. Without a time — the record could not say
+    /// — the percentage stands alone whatever the choice, rather than leaving a gap.
+    /// </summary>
+    private static string Progress(string percent, string? time, ProgressFormat format)
+    {
+        if (time == null)
+        {
+            return percent;
+        }
+
+        return format switch
+        {
+            ProgressFormat.Time => time,
+            ProgressFormat.Both => percent + " · " + time,
+            _ => percent,
+        };
+    }
+
+    /// <summary>
+    /// A time left, short enough for the STATUS column: <c>45 s</c>, <c>4 min</c>,
+    /// <c>1 h 05</c>. Rounded up, so it never reads zero while anything is left.
+    /// </summary>
+    public static string Duration(float seconds)
+    {
+        if (float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds < 0f)
+        {
+            return "?";
+        }
+
+        long whole = (long)Math.Ceiling(seconds);
+        if (whole < 60)
+        {
+            return whole.ToString(CultureInfo.InvariantCulture) + " s";
+        }
+
+        long minutes = (whole + 59) / 60;
+        if (minutes < 60)
+        {
+            return minutes.ToString(CultureInfo.InvariantCulture) + " min";
+        }
+
+        return (minutes / 60).ToString(CultureInfo.InvariantCulture) + " h "
+            + (minutes % 60).ToString("00", CultureInfo.InvariantCulture);
+    }
 
     /// <summary>How the DIR cell reads, for the chosen format.</summary>
     private static string Direction(NearbyEntity entity, Vec3 viewer, Vec3 forward, DirectionFormat format)
@@ -136,9 +196,10 @@ public static class RowFormatter
         NearbyEntity entity,
         Vec3 viewer,
         Vec3 forward,
-        DirectionFormat format = DirectionFormat.Degrees)
+        DirectionFormat format = DirectionFormat.Degrees,
+        ProgressFormat progress = ProgressFormat.Percent)
     {
-        RowCells cells = Cells(entity, viewer, forward, format);
+        RowCells cells = Cells(entity, viewer, forward, format, progress);
 
         return Compose(new[]
         {

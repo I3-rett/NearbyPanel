@@ -37,6 +37,8 @@ internal static class EntityMapper
 
         BaseAI ai = character.GetBaseAI();
         string? given = GivenName(tameable);
+        (float? taming, float? tamingLeft) = Taming(tameable);
+        (float? growth, float? growthLeft) = Growth(character);
 
         return new NearbyEntity(
             Name: given ?? Localize(character.m_name),
@@ -47,12 +49,14 @@ internal static class EntityMapper
             Position: ToVec3(character.transform.position),
             Level: character.GetLevel(),
             Status: tameable != null ? Localize(tameable.GetStatusString()) : null,
-            TamingProgress: TamingProgress(tameable),
+            TamingProgress: taming,
             Awareness: AwarenessOf(ai),
             Hostile: IsHostileToPlayer(ai),
             TargetsYou: TargetsLocalPlayer(character, ai),
-            GrowthProgress: GrowthProgress(character),
-            HasGivenName: given != null);
+            GrowthProgress: growth,
+            HasGivenName: given != null,
+            TamingSecondsLeft: tamingLeft,
+            GrowthSecondsLeft: growthLeft);
     }
 
     /// <summary>
@@ -85,8 +89,9 @@ internal static class EntityMapper
     }
 
     /// <summary>
-    /// How far along taming is, 0..1, or null when there is nothing to report —
-    /// already tamed, not tameable, or the record is not readable yet.
+    /// How far along taming is, 0..1, and the feeding seconds still owed, or nulls
+    /// when there is nothing to report — already tamed, not tameable, or the record
+    /// is not readable yet. The seconds are <c>s_tameTimeLeft</c> itself.
     ///
     /// Read from the ZDO rather than the component, because the value is only
     /// written by whichever peer owns the creature. That is what lets this work for
@@ -94,11 +99,11 @@ internal static class EntityMapper
     /// vanilla taming takes many minutes, so the whole-percent figure simply steps
     /// every few seconds; it is reported as read, with no smoothing.
     /// </summary>
-    private static float? TamingProgress(Tameable? tameable)
+    private static (float? Progress, float? SecondsLeft) Taming(Tameable? tameable)
     {
         if (tameable == null || tameable.IsTamed())
         {
-            return null;
+            return (null, null);
         }
 
         // m_tamingTime is serialized per prefab, so it must be read off the live
@@ -106,24 +111,25 @@ internal static class EntityMapper
         float total = tameable.m_tamingTime;
         if (total <= 0f)
         {
-            return null;
+            return (null, null);
         }
 
         ZDO? zdo = ZdoOf(tameable);
         if (zdo == null)
         {
-            return null;
+            return (null, null);
         }
 
         // Defaulting to the full duration means "no key written yet" reads as 0%,
         // which is what the game itself does.
-        float remaining = zdo.GetFloat(ZDOVars.s_tameTimeLeft, total);
-        return 1f - Mathf.Clamp01(remaining / total);
+        float remaining = Mathf.Clamp(zdo.GetFloat(ZDOVars.s_tameTimeLeft, total), 0f, total);
+        return (1f - (remaining / total), remaining);
     }
 
     /// <summary>
-    /// How far a young animal is towards its adult form, 0..1, or null when there is
-    /// nothing to report — no growth stage, or no birth time in the record yet.
+    /// How far a young animal is towards its adult form, 0..1, and the seconds until
+    /// it gets there, or nulls when there is nothing to report — no growth stage, or
+    /// no birth time in the record yet.
     ///
     /// <c>Growup.GrowUpdate</c> does nothing but compare the time since the creature
     /// spawned against <c>m_growTime</c>, so the same two numbers give the progress.
@@ -136,12 +142,12 @@ internal static class EntityMapper
     /// growth of any creature whose birth time had not yet been recorded. The same
     /// trap as <c>Character.GetHoverName()</c> — read the record instead.
     /// </summary>
-    private static float? GrowthProgress(Character character)
+    private static (float? Progress, float? SecondsLeft) Growth(Character character)
     {
         Growup growup = character.GetComponent<Growup>();
         if (growup == null)
         {
-            return null;
+            return (null, null);
         }
 
         // m_growTime is serialized per prefab, so it must be read off the live
@@ -149,13 +155,13 @@ internal static class EntityMapper
         float total = growup.m_growTime;
         if (total <= 0f)
         {
-            return null;
+            return (null, null);
         }
 
         ZDO? zdo = ZdoOf(growup);
         if (zdo == null || ZNet.instance == null)
         {
-            return null;
+            return (null, null);
         }
 
         // Zero means no peer has stamped a birth time yet, which is unknown rather
@@ -164,16 +170,17 @@ internal static class EntityMapper
         long born = zdo.GetLong(ZDOVars.s_spawnTime, 0L);
         if (born <= 0L || born > DateTime.MaxValue.Ticks)
         {
-            return null;
+            return (null, null);
         }
 
         double elapsed = (ZNet.instance.GetTime() - new DateTime(born)).TotalSeconds;
         if (double.IsNaN(elapsed))
         {
-            return null;
+            return (null, null);
         }
 
-        return Mathf.Clamp01((float)(elapsed / total));
+        float progress = Mathf.Clamp01((float)(elapsed / total));
+        return (progress, total * (1f - progress));
     }
 
     /// <summary>
