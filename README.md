@@ -12,6 +12,10 @@ direction, altitude, star rating, what each one has noticed, and live taming pro
 Client-side only. The server does not need it, it will not stop you joining a server that
 does not have it, and players without it see nothing different.
 
+![Lox calves growing under a tower, each with its growth percentage](docs/images/lox-pen.jpg)
+
+![A boar pen at night: piglets growing, the parents, and a greyling further out](docs/images/boar-pen.jpg)
+
 ## Why
 
 Watching a breeding pen means walking up to each animal and reading its hover text, one at

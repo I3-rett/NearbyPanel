@@ -36,7 +36,7 @@ internal sealed class PanelView
     private static readonly Color TextColour = new(0.93f, 0.90f, 0.83f, 1f);
     private static readonly Color HeaderColour = new(0.85f, 0.73f, 0.47f, 1f);
     private static readonly Color TitleColour = new(1f, 0.95f, 0.85f, 1f);
-    private static readonly Color TamingColour = new(1f, 0.72f, 0.36f, 1f);
+    private static readonly Color ProgressColour = new(1f, 0.72f, 0.36f, 1f);
     private static readonly Color ThreatTint = new(0.75f, 0.13f, 0.11f, 0.26f);
     private static readonly Color ThreatColour = new(1f, 0.55f, 0.48f, 1f);
 
@@ -52,7 +52,7 @@ internal sealed class PanelView
     private Texture2D? _pixel;
     private GUIStyle? _rowStyle;
     private GUIStyle? _rowStyleRight;
-    private GUIStyle? _tamingStyle;
+    private GUIStyle? _progressStyle;
     private GUIStyle? _threatStyle;
     private GUIStyle? _headerStyle;
     private GUIStyle? _titleStyle;
@@ -112,9 +112,9 @@ internal sealed class PanelView
             _values[5] = cells.Awareness;
             _values[6] = cells.Status;
 
-            // Taming progress is the thing worth spotting at a glance, so the
+            // A percentage is the thing worth spotting at a glance, so the
             // status cell is tinted for an animal being tamed.
-            GUIStyle? statusStyle = cells.Taming ? _tamingStyle : cells.Threat ? _threatStyle : null;
+            GUIStyle? statusStyle = cells.Progress ? _progressStyle : cells.Threat ? _threatStyle : null;
 
             DrawCells(x, y, innerWidth, rowHeight, _values, cells.Threat ? _threatStyle! : _rowStyle!, statusStyle);
             y += rowHeight;
@@ -218,8 +218,8 @@ internal sealed class PanelView
 
         _rowStyleRight = new GUIStyle(_rowStyle) { alignment = TextAnchor.MiddleRight };
 
-        _tamingStyle = new GUIStyle(_rowStyle);
-        _tamingStyle.normal.textColor = TamingColour;
+        _progressStyle = new GUIStyle(_rowStyle);
+        _progressStyle.normal.textColor = ProgressColour;
 
         _threatStyle = new GUIStyle(_rowStyle);
         _threatStyle.normal.textColor = ThreatColour;

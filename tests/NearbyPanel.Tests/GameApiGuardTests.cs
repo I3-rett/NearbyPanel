@@ -1,3 +1,4 @@
+using System.Linq;
 using Mono.Cecil;
 using Xunit;
 
@@ -117,10 +118,12 @@ public class GameApiGuardTests
     [Theory]
     [InlineData("s_tameTimeLeft")]
     [InlineData("s_tamedName")]
+    [InlineData("s_spawnTime")]
     public void ZDOVars_keys_are_public_static_ints(string fieldName)
     {
-        // Taming progress and the given name live in the network record, which is
-        // why a client that does not own the creature can still read them. The type
+        // Taming progress, the given name and the birth instant live in the network
+        // record, which is why a client that does not own the creature can still read
+        // them — growth is readable for a friend's animals too. The type
         // matters too: if these became a wrapper struct, GetFloat(Int32, Single)
         // would still exist and the guard would stay green while the call broke.
         if (!GameAssembly.IsAvailable)
@@ -167,5 +170,95 @@ public class GameApiGuardTests
 
         Assert.True(GameAssembly.Method("ZNetView", "IsValid").IsPublic);
         Assert.True(GameAssembly.Method("ZNetView", "GetZDO").IsPublic);
+    }
+
+    // ----- growth: EntityMapper.GrowthProgress ----------------------------
+
+    [Fact]
+    public void ZDO_GetLong_takes_a_hash_and_a_default()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("ZDO", "GetLong", "Int32", "Int64");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("Int64", method.ReturnType.Name);
+    }
+
+    [Fact]
+    public void Growup_m_growTime_is_a_public_float_field()
+    {
+        // The denominator of the growth percentage, and like m_tamingTime it is
+        // serialized per prefab: the assembly only carries a 60 second default that
+        // every real prefab overwrites, so it must be read off the live component.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition field = GameAssembly.Field("Growup", "m_growTime");
+
+        Assert.True(field.IsPublic);
+        Assert.Equal("Single", field.FieldType.Name);
+    }
+
+    [Fact]
+    public void Growup_is_a_public_component()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition type = GameAssembly.Type("Growup");
+
+        Assert.True(type.IsPublic);
+        Assert.Equal("MonoBehaviour", type.BaseType.Name);
+    }
+
+    [Fact]
+    public void ZNet_exposes_the_shared_clock()
+    {
+        // Growth is measured against network time, not the local machine's, so every
+        // client agrees on how old a calf is.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition time = GameAssembly.Method("ZNet", "GetTime");
+
+        Assert.True(time.IsPublic);
+        Assert.False(time.IsStatic);
+        Assert.Equal("System.DateTime", time.ReturnType.FullName);
+
+        MethodDefinition instance = GameAssembly.Method("ZNet", "get_instance");
+
+        Assert.True(instance.IsPublic);
+        Assert.True(instance.IsStatic);
+    }
+
+    [Fact]
+    public void BaseAI_GetTimeSinceSpawned_still_writes_to_the_record()
+    {
+        // This guard is inverted on purpose. The mapper computes growth from the raw
+        // record specifically because this convenient-looking getter stamps the
+        // current time into the ZDO when the key is unset. If a game update ever makes
+        // it a pure read, this fails and the workaround can go.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("BaseAI", "GetTimeSinceSpawned");
+        bool writes = method.Body.Instructions.Any(instruction =>
+            instruction.Operand is MethodReference called
+            && called.DeclaringType.Name == "ZDO"
+            && called.Name == "Set");
+
+        Assert.True(writes, "BaseAI.GetTimeSinceSpawned no longer writes; EntityMapper can call it directly.");
     }
 }

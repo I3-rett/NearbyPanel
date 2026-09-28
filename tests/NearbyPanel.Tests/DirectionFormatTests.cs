@@ -117,12 +117,12 @@ public class DirectionFormatTests
     }
 
     [Fact]
-    public void Taming_is_flagged_on_the_cells_rather_than_inferred_from_the_text()
+    public void Progress_is_flagged_on_the_cells_rather_than_inferred_from_the_text()
     {
         NearbyEntity taming = new("Boar", EntityKind.Tameable, new Vec3(0f, 0f, 5f), 1, "Hungry", 0.42f);
         NearbyEntity tamed = new("Fenrir", EntityKind.Tameable, new Vec3(0f, 0f, 5f), 2, "Happy", null);
 
-        Assert.True(RowFormatter.Cells(taming, Origin, North).Taming);
-        Assert.False(RowFormatter.Cells(tamed, Origin, North).Taming);
+        Assert.True(RowFormatter.Cells(taming, Origin, North).Progress);
+        Assert.False(RowFormatter.Cells(tamed, Origin, North).Progress);
     }
 }

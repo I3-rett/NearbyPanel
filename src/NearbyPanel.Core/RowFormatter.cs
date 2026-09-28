@@ -50,21 +50,6 @@ public static class RowFormatter
         float altitude = Geometry.HeightDelta(viewer, entity.Position);
         string direction = Direction(entity, viewer, forward, format);
 
-        string status = entity.Status ?? string.Empty;
-        if (entity.TamingProgress is { } progress)
-        {
-            string percent = Percent(progress);
-            status = status.Length == 0 ? percent : percent + " " + status;
-        }
-
-        if (status.Length == 0 && entity.Hostile)
-        {
-            // Non-tameables have nothing else to put here, and "would attack me"
-            // is not always obvious from the name: an aggravated dvergr looks the
-            // same as a neutral one.
-            status = "hostile";
-        }
-
         return new RowCells(
             Name: entity.Name ?? string.Empty,
             Distance: Format(distance, "0.0"),
@@ -72,10 +57,59 @@ public static class RowFormatter
             Altitude: Format(altitude, "+0;-0;0"),
             Level: Stars(entity.Level),
             Awareness: AwarenessLabel(entity),
-            Status: status,
-            Taming: entity.TamingProgress.HasValue,
+            Status: StatusText(entity),
+            Progress: HasProgress(entity),
             Threat: entity.Hostile && entity.Awareness == Core.Awareness.Alerted);
     }
+
+    /// <summary>
+    /// The STATUS cell: one percentage and the wording that says what it measures.
+    ///
+    /// Taming and growth share this column because a creature only ever has one of
+    /// them worth watching. Taming wins when it is under way, and that is not an
+    /// arbitrary tie-break: the adapter reports taming progress only for an animal
+    /// that is not yet tamed, so growth surfaces exactly when taming has finished
+    /// and there is nothing else to wait for.
+    /// </summary>
+    public static string StatusText(NearbyEntity entity)
+    {
+        string status = entity.Status ?? string.Empty;
+
+        if (entity.TamingProgress is { } taming)
+        {
+            string percent = Percent(taming);
+            return status.Length == 0 ? percent : percent + " " + status;
+        }
+
+        if (entity.GrowthProgress is { } growth)
+        {
+            // The game has no wording of its own for growth — GetStatusString only
+            // ever says frightened, hungry, happy or tame-in-progress — so the label
+            // is this mod's. The game's word still follows it, separated rather than
+            // run together, because "hungry" matters in a breeding pen and reading
+            // "62% grown Hungry" as one phrase is worse than reading two.
+            string percent = Percent(growth) + " grown";
+            return status.Length == 0 ? percent : percent + ", " + status;
+        }
+
+        if (status.Length == 0 && entity.Hostile)
+        {
+            // Non-tameables have nothing else to put here, and "would attack me"
+            // is not always obvious from the name: an aggravated dvergr looks the
+            // same as a neutral one.
+            return "hostile";
+        }
+
+        return status;
+    }
+
+    /// <summary>
+    /// Whether the status cell carries a percentage, and so deserves the panel's
+    /// highlight. Kept beside <see cref="StatusText"/> so the two cannot disagree
+    /// about which rows have progress to show.
+    /// </summary>
+    public static bool HasProgress(NearbyEntity entity) =>
+        entity.TamingProgress.HasValue || entity.GrowthProgress.HasValue;
 
     /// <summary>How the DIR cell reads, for the chosen format.</summary>
     private static string Direction(NearbyEntity entity, Vec3 viewer, Vec3 forward, DirectionFormat format)
@@ -137,7 +171,7 @@ public static class RowFormatter
     }
 
     /// <summary>
-    /// Taming progress as whole percent. Truncated, not rounded, to match the
+    /// A 0..1 progress as whole percent. Truncated, not rounded, to match the
     /// game's own <c>Tameable.GetTameness()</c>, which casts to int.
     /// </summary>
     public static string Percent(float progress)
