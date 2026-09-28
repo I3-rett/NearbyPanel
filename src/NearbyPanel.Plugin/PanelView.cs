@@ -23,13 +23,11 @@ internal sealed class PanelView
     private const float Padding = PanelLayout.Padding;
 
     /// <summary>
-    /// Left edge of each column as a fraction of the inner width, plus a final 1.0
-    /// so the last column has a right edge. NAME and STATUS carry the long text; the
-    /// four numeric columns are kept narrow and sit together in the middle. ★ holds
-    /// one digit and gives ALERT the room its bold heading needs.
+    /// Left edge of each column in pixels, plus the right edge of the last. Filled
+    /// from the configured widths every draw, so a change in Configuration Manager
+    /// shows at once; reused so that costs nothing.
     /// </summary>
-    private static readonly float[] ColumnEdges =
-        { 0.00f, 0.30f, 0.42f, 0.53f, 0.61f, 0.66f, 0.75f, 1.00f };
+    private readonly float[] _columnEdges = new float[RowFormatter.ColumnNames.Length + 1];
 
     private static readonly Color Background = new(0.07f, 0.06f, 0.05f, 0.88f);
     private static readonly Color RowTint = new(1f, 1f, 1f, 0.045f);
@@ -64,7 +62,8 @@ internal sealed class PanelView
         PanelRect placement,
         int maxVisibleRows,
         int fontSize,
-        string title)
+        string title,
+        float[] columnWidths)
     {
         EnsureStyles(fontSize);
 
@@ -81,10 +80,12 @@ internal sealed class PanelView
         float innerWidth = placement.Width - (Padding * 2f);
         float x = panel.x + Padding;
 
+        PanelLayout.ColumnEdges(columnWidths, innerWidth, _columnEdges);
+
         GUI.Label(new Rect(x, y, innerWidth, rowHeight), title, _titleStyle);
         y += rowHeight;
 
-        DrawCells(x, y, innerWidth, rowHeight, Headings, _headerStyle!, null);
+        DrawCells(x, y, rowHeight, Headings, _headerStyle!, null);
         y += rowHeight;
 
         // A hairline under the headings, so the table reads as a table.
@@ -117,7 +118,7 @@ internal sealed class PanelView
             // status cell is tinted for an animal being tamed.
             GUIStyle? statusStyle = cells.Progress ? _progressStyle : cells.Threat ? _threatStyle : null;
 
-            DrawCells(x, y, innerWidth, rowHeight, _values, cells.Threat ? _threatStyle! : _rowStyle!, statusStyle);
+            DrawCells(x, y, rowHeight, _values, cells.Threat ? _threatStyle! : _rowStyle!, statusStyle);
             y += rowHeight;
         }
 
@@ -134,7 +135,6 @@ internal sealed class PanelView
     private void DrawCells(
         float x,
         float y,
-        float width,
         float rowHeight,
         string[] values,
         GUIStyle normal,
@@ -143,10 +143,10 @@ internal sealed class PanelView
         bool[] rightAligned = RightAligned;
         bool isHeader = ReferenceEquals(normal, _headerStyle);
 
-        for (int column = 0; column < values.Length && column + 1 < ColumnEdges.Length; column++)
+        for (int column = 0; column < values.Length && column + 1 < _columnEdges.Length; column++)
         {
-            float left = x + (ColumnEdges[column] * width);
-            float right = x + (ColumnEdges[column + 1] * width);
+            float left = x + _columnEdges[column];
+            float right = x + _columnEdges[column + 1];
 
             GUIStyle style = normal;
 

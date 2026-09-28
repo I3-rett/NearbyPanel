@@ -105,6 +105,31 @@ public static class PanelLayout
             h);
     }
 
+    /// <summary>
+    /// Left edge of each column in pixels from the panel's inner left, plus a final
+    /// edge at <paramref name="innerWidth"/>. <paramref name="widths"/> covers every
+    /// column but the last, which takes whatever is left — STATUS carries the longest
+    /// text. Written into <paramref name="edges"/> (length widths + 2) because the
+    /// panel recomputes it every draw and must not allocate.
+    ///
+    /// Everything is kept inside the panel: a negative width is zero, and columns
+    /// that overrun the panel are cut at its edge rather than drawn past it.
+    /// </summary>
+    public static void ColumnEdges(float[] widths, float innerWidth, float[] edges)
+    {
+        float inner = innerWidth < 0f ? 0f : innerWidth;
+        float at = 0f;
+
+        for (int i = 0; i < widths.Length; i++)
+        {
+            edges[i] = at;
+            at = Clamp(at + (widths[i] < 0f ? 0f : widths[i]), 0f, inner);
+        }
+
+        edges[widths.Length] = at;
+        edges[widths.Length + 1] = inner;
+    }
+
     private static float Clamp(float value, float min, float max) =>
         value < min ? min : value > max ? max : value;
 

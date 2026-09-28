@@ -137,4 +137,40 @@ public class PanelLayoutTests
         Assert.Equal(ScreenH, r.Height, 3);
         Assert.Equal(0f, r.Y, 3);
     }
+
+    // ----- column widths --------------------------------------------------
+
+    private static float[] Edges(float inner, params float[] widths)
+    {
+        float[] edges = new float[widths.Length + 2];
+        PanelLayout.ColumnEdges(widths, inner, edges);
+        return edges;
+    }
+
+    [Fact]
+    public void Columns_sit_side_by_side_and_the_last_takes_the_rest()
+    {
+        Assert.Equal(new[] { 0f, 140f, 200f, 684f }, Edges(684f, 140f, 60f));
+    }
+
+    [Fact]
+    public void Columns_wider_than_the_panel_are_cut_at_its_edge()
+    {
+        // STATUS ends up with nothing rather than drawing outside the panel.
+        Assert.Equal(new[] { 0f, 300f, 400f, 400f }, Edges(400f, 300f, 200f));
+    }
+
+    [Fact]
+    public void A_negative_width_counts_as_zero()
+    {
+        Assert.Equal(new[] { 0f, 0f, 60f, 684f }, Edges(684f, -50f, 60f));
+    }
+
+    [Fact]
+    public void A_width_of_zero_hides_the_column()
+    {
+        float[] edges = Edges(684f, 140f, 0f, 60f);
+
+        Assert.Equal(edges[1], edges[2]);
+    }
 }
