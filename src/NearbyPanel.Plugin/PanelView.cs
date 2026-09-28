@@ -25,10 +25,11 @@ internal sealed class PanelView
     /// <summary>
     /// Left edge of each column as a fraction of the inner width, plus a final 1.0
     /// so the last column has a right edge. NAME and STATUS carry the long text; the
-    /// four numeric columns are kept narrow and sit together in the middle.
+    /// four numeric columns are kept narrow and sit together in the middle. ★ holds
+    /// one digit and gives ALERT the room its bold heading needs.
     /// </summary>
     private static readonly float[] ColumnEdges =
-        { 0.00f, 0.30f, 0.42f, 0.53f, 0.61f, 0.67f, 0.75f, 1.00f };
+        { 0.00f, 0.30f, 0.42f, 0.53f, 0.61f, 0.66f, 0.75f, 1.00f };
 
     private static readonly Color Background = new(0.07f, 0.06f, 0.05f, 0.88f);
     private static readonly Color RowTint = new(1f, 1f, 1f, 0.045f);
