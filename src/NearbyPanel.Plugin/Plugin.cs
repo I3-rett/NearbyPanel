@@ -25,7 +25,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     /// <summary>The DIR format the panel is using, so the dump matches it.</summary>
     internal static DirectionFormat DirectionFormat =>
-        _directionFormat == null ? Core.DirectionFormat.Degrees : _directionFormat.Value;
+        _directionFormat == null ? Core.DirectionFormat.Arrow : _directionFormat.Value;
 
     /// <summary>The STATUS progress format the panel is using, so the dump matches it.</summary>
     internal static ProgressFormat ProgressFormat =>
@@ -121,7 +121,7 @@ public sealed class Plugin : BaseUnityPlugin
         _directionFormat = Config.Bind(
             "Panel",
             "Direction format",
-            DirectionFormat.Degrees,
+            DirectionFormat.Arrow,
             new ConfigDescription(
                 "How the DIR column reads. Degrees: angle from where you are looking, "
                 + "0 ahead, 90 right, -90 left, 180 behind. Relative: the same as letters, "
