@@ -123,9 +123,12 @@ public static class RowFormatter
 
         float bearing = Geometry.RelativeBearing(viewer, forward, entity.Position);
 
-        return format == DirectionFormat.Relative
-            ? Geometry.RelativeHeading(bearing)
-            : Geometry.DegreesLabel(bearing);
+        return format switch
+        {
+            DirectionFormat.Relative => Geometry.RelativeHeading(bearing),
+            DirectionFormat.Arrow => Geometry.RelativeArrow(bearing),
+            _ => Geometry.DegreesLabel(bearing),
+        };
     }
 
     /// <summary>The fixed-width form, for the console and the log.</summary>
