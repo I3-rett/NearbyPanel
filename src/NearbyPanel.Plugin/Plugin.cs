@@ -178,7 +178,7 @@ public sealed class Plugin : BaseUnityPlugin
             12,
             new ConfigDescription(
                 "Rows drawn before the list is cut short with a count of the rest.",
-                new AcceptableValueRange<int>(1, Tuning.MaxRows),
+                new AcceptableValueRange<int>(1, Tuning.MaxVisibleRows),
                 new ConfigurationManagerAttributes { Order = 60 }));
 
         _fontSize = Config.Bind(
