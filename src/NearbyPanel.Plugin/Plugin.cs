@@ -113,7 +113,8 @@ public sealed class Plugin : BaseUnityPlugin
                 "How the DIR column reads. Degrees: angle from where you are looking, "
                 + "0 ahead, 90 right, -90 left, 180 behind. Relative: the same as letters, "
                 + "F ahead, R right, B behind. Compass: world direction, N NE E SE S SW W NW, "
-                + "which does not change as you turn.",
+                + "which does not change as you turn. Arrow: the same as Relative, drawn as "
+                + "eight arrows.",
                 null,
                 new ConfigurationManagerAttributes { Order = 95 }));
 

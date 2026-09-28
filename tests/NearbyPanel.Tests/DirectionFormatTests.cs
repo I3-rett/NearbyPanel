@@ -101,6 +101,58 @@ public class DirectionFormatTests
         Assert.Equal("L", RowFormatter.Cells(target, Origin, East, DirectionFormat.Relative).Direction);
     }
 
+    // ----- arrows ----------------------------------------------------------
+
+    [Theory]
+    [InlineData(0f, "↑")]
+    [InlineData(45f, "↗")]
+    [InlineData(90f, "→")]
+    [InlineData(135f, "↘")]
+    [InlineData(180f, "↓")]
+    [InlineData(-180f, "↓")]
+    [InlineData(-135f, "↙")]
+    [InlineData(-90f, "←")]
+    [InlineData(-45f, "↖")]
+    [InlineData(22.4f, "↑")]  // each arrow owns a symmetric 45° sector
+    [InlineData(22.5f, "↗")]
+    [InlineData(-22.4f, "↑")]
+    [InlineData(-22.6f, "↖")]
+    [InlineData(405f, "↗")]   // any angle folds back into range
+    public void RelativeArrow_points_where_the_target_is_on_screen(float bearing, string expected)
+    {
+        Assert.Equal(expected, Geometry.RelativeArrow(bearing));
+    }
+
+    [Fact]
+    public void RelativeArrow_survives_a_nonsense_angle()
+    {
+        Assert.Equal("?", Geometry.RelativeArrow(float.NaN));
+    }
+
+    [Fact]
+    public void Arrows_turn_with_the_viewer()
+    {
+        // Rotating the viewer is what exercises the bearing, not just the lookup.
+        NearbyEntity target = At(0f, 10f); // due north
+
+        Assert.Equal("↑", RowFormatter.Cells(target, Origin, North, DirectionFormat.Arrow).Direction);
+        Assert.Equal("←", RowFormatter.Cells(target, Origin, East, DirectionFormat.Arrow).Direction);
+    }
+
+    [Fact]
+    public void Arrows_and_letters_agree_on_the_sector()
+    {
+        // Same eight sectors, so a creature cannot be "FR" in one format and "→" in the other.
+        string[] letters = { "F", "FR", "R", "BR", "B", "BL", "L", "FL" };
+        string[] arrows = { "↑", "↗", "→", "↘", "↓", "↙", "←", "↖" };
+
+        for (float bearing = -179f; bearing <= 180f; bearing += 0.5f)
+        {
+            int index = System.Array.IndexOf(letters, Geometry.RelativeHeading(bearing));
+            Assert.Equal(arrows[index], Geometry.RelativeArrow(bearing));
+        }
+    }
+
     // ----- layout ----------------------------------------------------------
 
     [Fact]

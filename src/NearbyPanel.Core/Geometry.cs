@@ -58,7 +58,45 @@ public static class Geometry
     /// compass letters — N/E/S/W would sit next to a real-world altitude column and
     /// be read as world directions, which these are not.
     /// </summary>
-    public static string RelativeHeading(float relativeBearing)
+    public static string RelativeHeading(float relativeBearing) => RelativeSector(relativeBearing) switch
+    {
+        0 => "F",
+        1 => "FR",
+        2 => "R",
+        3 => "BR",
+        4 => "B",
+        5 => "BL",
+        6 => "L",
+        _ => "FL",
+    };
+
+    /// <summary>
+    /// The bearing as one of eight arrows, as the target sits on screen: ↑ ahead,
+    /// → right, ↓ behind. The same sectors as <see cref="RelativeHeading"/>, read
+    /// without having to decode letters.
+    /// </summary>
+    public static string RelativeArrow(float relativeBearing)
+    {
+        if (float.IsNaN(relativeBearing) || float.IsInfinity(relativeBearing))
+        {
+            return "?";
+        }
+
+        return RelativeSector(relativeBearing) switch
+        {
+            0 => "↑",
+            1 => "↗",
+            2 => "→",
+            3 => "↘",
+            4 => "↓",
+            5 => "↙",
+            6 => "←",
+            _ => "↖",
+        };
+    }
+
+    /// <summary>Which eighth of a turn a relative bearing falls in, 0 ahead, clockwise.</summary>
+    private static int RelativeSector(float relativeBearing)
     {
         double bearing = Normalise(relativeBearing);
         if (bearing < 0.0)
@@ -69,18 +107,7 @@ public static class Geometry
         // Round half away from zero, so every label owns a symmetric 45 degree
         // sector. Math.Round would use banker's rounding, which makes the sector
         // at 22.5 degrees behave differently from the one at 67.5.
-        int sector = (int)Math.Floor((bearing / 45.0) + 0.5) % 8;
-        return sector switch
-        {
-            0 => "F",
-            1 => "FR",
-            2 => "R",
-            3 => "BR",
-            4 => "B",
-            5 => "BL",
-            6 => "L",
-            _ => "FL",
-        };
+        return (int)Math.Floor((bearing / 45.0) + 0.5) % 8;
     }
 
     /// <summary>

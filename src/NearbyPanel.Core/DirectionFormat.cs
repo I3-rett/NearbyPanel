@@ -20,4 +20,10 @@ public enum DirectionFormat
     /// face. Matches the map rather than the screen.
     /// </summary>
     Compass,
+
+    /// <summary>
+    /// Eight arrows from where you are looking: ↑ ahead, → right, ↓ behind. The same
+    /// sectors as <see cref="Relative"/>, readable at a glance.
+    /// </summary>
+    Arrow,
 }
