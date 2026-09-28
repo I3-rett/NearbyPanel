@@ -9,8 +9,8 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "I3_rett"
 name = "NearbyPanel"
-versionNumber = "1.0.0"
-description = "Lists the creatures near you with distance, direction and taming progress. Client-side only."
+versionNumber = "1.1.0"
+description = "Lists the creatures near you with distance, direction, taming and growth progress, and why an animal is or is not breeding. Client-side only."
 websiteUrl = "https://github.com/I3-rett/NearbyPanel"
 containsNsfwContent = false
 

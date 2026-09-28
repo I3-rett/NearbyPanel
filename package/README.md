@@ -1,7 +1,8 @@
 # NearbyPanel
 
 Lists the creatures around you — how far, which way, how high, how many stars, what they
-have noticed, and how far along any animal you are taming is. Press **N**.
+have noticed, how far along any animal you are taming or raising is, and why a tamed animal
+is or is not breeding. Press **N**.
 
 **Client-side only. The server does not need it, and it will not stop you joining a server
 that does not have it.** Players without the mod are unaffected and see nothing different.
@@ -12,10 +13,11 @@ that does not have it.** Players without the mod are unaffected and see nothing 
 
 ## Features
 
-- Every creature within 50 m, nearest first, refreshed four times a second
+- Every creature within 50 m, nearest first, refreshed four times a second; animals you
+  have named come first
 - Distance along the ground, so it is the number you actually walk
-- Direction in one of three formats: degrees from where you are looking (0 ahead, 180
-  behind), relative letters, or world compass points that do not turn when you do
+- Direction as an arrow from where you are looking, or in degrees, relative letters, or
+  world compass points that do not turn when you do
 - Star rating, and altitude relative to you
 - What each creature has noticed: nothing, something, or you specifically when the game
   can confirm it
@@ -23,6 +25,11 @@ that does not have it.** Players without the mod are unaffected and see nothing 
   take aggro
 - Live taming progress, read from the same record the game uses, so an animal a friend is
   taming reports its progress too, along with whether it is hungry or frightened
+- Growth of young animals, and taming, growth and pregnancy as a percentage, a time left or
+  both: `62% grown · 12 min`. Taming time accounts for Brew of Animal Whispers
+- Breeding: `Love 2/4`, `Pregnant`, or what is stopping it — `Crowded 5/4 · Lox Calf 18.4 m`,
+  `Partner pregnant`, `Partner hungry`, `No partner` — with each species' own ranges
+- Column widths are settings, so the panel fits your font and screen
 - Filter the list by name with `nearby_filter boar`, or clear it with `nearby_filter`
 - `nearby_dump` writes the current list to the log, which is useful in a bug report
 - Other players are never listed
