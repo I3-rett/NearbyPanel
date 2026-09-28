@@ -108,6 +108,11 @@ public static class RowFormatter
             return status.Length == 0 ? percent : percent + ", " + status;
         }
 
+        if (entity.Breeding is { } breeding && BreedingText(breeding, format) is { } text)
+        {
+            return text;
+        }
+
         if (status.Length == 0 && entity.Hostile)
         {
             // Non-tameables have nothing else to put here, and "would attack me"
@@ -125,7 +130,75 @@ public static class RowFormatter
     /// about which rows have progress to show.
     /// </summary>
     public static bool HasProgress(NearbyEntity entity) =>
-        entity.TamingProgress.HasValue || entity.GrowthProgress.HasValue;
+        entity.TamingProgress.HasValue
+        || entity.GrowthProgress.HasValue
+        || entity.Breeding?.Pregnant == true;
+
+    /// <summary>
+    /// A breeding animal's state, in the order the game checks it: pregnant, then
+    /// hungry, then crowded, then short of a partner, and otherwise its love points.
+    /// Null when hungry, so the game's own word stands in the column instead.
+    /// </summary>
+    private static string? BreedingText(Breeding breeding, ProgressFormat format)
+    {
+        if (breeding.Pregnant)
+        {
+            if (breeding.PregnancySecondsLeft is not { } left || breeding.PregnancyProgress is not { } progress)
+            {
+                return "Pregnant";
+            }
+
+            // Due is a state, not a zero: the birth waits for the owner's next tick.
+            return left <= 0f
+                ? "Pregnant, due"
+                : "Pregnant " + Progress(Percent(progress), Duration(left), format);
+        }
+
+        if (breeding.Hungry)
+        {
+            return null;
+        }
+
+        if (breeding.IsCrowded)
+        {
+            string crowded = "Crowded " + Count(breeding.Crowd!.Value) + "/" + Count(breeding.MaxCrowd);
+
+            // Who to move first: the total alone cannot be checked against the pen by eye.
+            return breeding.NearestCrowder is { } who && breeding.NearestCrowderDistance is { } metres
+                ? crowded + " · " + who + " " + Format(metres, "0.0") + " m"
+                : crowded;
+        }
+
+        if (breeding.LacksPartner)
+        {
+            // Feeding fixes a hungry partner now; a pregnant one only needs waiting
+            // for. Either way there is a partner, which "No partner" would deny.
+            if (breeding.PartnerHungry)
+            {
+                return "Partner hungry";
+            }
+
+            if (breeding.PartnerPregnant)
+            {
+                if (breeding.PartnerPregnancySecondsLeft is not { } left
+                    || breeding.PartnerPregnancyProgress is not { } progress)
+                {
+                    return "Partner pregnant";
+                }
+
+                // Read like every other progress in the column, per Progress format.
+                return left <= 0f
+                    ? "Partner pregnant, due"
+                    : "Partner pregnant " + Progress(Percent(progress), Duration(left), format);
+            }
+
+            return "No partner";
+        }
+
+        return "Love " + Count(breeding.LovePoints) + "/" + Count(breeding.RequiredLovePoints);
+    }
+
+    private static string Count(int value) => value.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Percent, time, or both, as chosen. Without a time — the record could not say
