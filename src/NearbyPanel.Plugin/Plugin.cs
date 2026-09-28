@@ -145,7 +145,7 @@ public sealed class Plugin : BaseUnityPlugin
         _anchor = Config.Bind(
             "Panel",
             "Anchor",
-            PanelAnchor.TopLeft,
+            PanelAnchor.BottomRight,
             new ConfigDescription(
                 "Which corner of the screen the panel is pinned to. The margins below are "
                 + "measured from that corner.",
@@ -327,7 +327,7 @@ public sealed class Plugin : BaseUnityPlugin
     /// </summary>
     private void BindColumnWidths()
     {
-        float[] defaults = { 120f, 60f, 64f, 64f, 28f, 80f };
+        float[] defaults = { 120f, 64f, 64f, 64f, 32f, 80f };
 
         // ASCII keys: the cfg file is edited by hand too, and "★ width" is hard to type.
         string[] names = { "NAME", "DIST", "DIR", "ALT", "Stars", "ALERT" };
