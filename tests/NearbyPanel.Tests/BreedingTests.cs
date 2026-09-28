@@ -108,6 +108,46 @@ public class BreedingTests
         Assert.Equal(2, Resolved(found, 0).Crowd);
     }
 
+    [Fact]
+    public void Crowding_names_the_nearest_animal_in_the_way()
+    {
+        // The tower from the dump, scaled to a 10 m range: parents 8 m above the young.
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, y: 8f, breeding: Rules(), name: "PAPA"),
+            Animal(Boar, 2f, y: 8f, name: "MAMA"),
+            Animal(Piglet, 3f, name: "Piglet A"),
+            Animal(Piglet, 1f, name: "Piglet B"),
+            Animal(Piglet, 20f, name: "Far away"),
+        };
+
+        Breeding papa = Resolved(found, 0);
+
+        // Not MAMA: a ready partner within reach is needed, not in the way.
+        Assert.Equal("Piglet B", papa.NearestCrowder);
+        Assert.Equal(8.06f, papa.NearestCrowderDistance!.Value, 2);
+    }
+
+    [Fact]
+    public void An_unready_animal_of_its_own_kind_can_be_the_one_in_the_way()
+    {
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules(), name: "PAPA"),
+            Animal(Boar, 2f, ready: false, name: "Hungry sow"),
+        };
+
+        Assert.Equal("Hungry sow", Resolved(found, 0).NearestCrowder);
+    }
+
+    [Fact]
+    public void Alone_there_is_no_one_in_the_way()
+    {
+        List<NearbyEntity> found = new() { Animal(Boar, 0f, breeding: Rules()) };
+
+        Assert.Null(Resolved(found, 0).NearestCrowder);
+    }
+
     // ----- partner ---------------------------------------------------------
 
     [Fact]
@@ -165,6 +205,18 @@ public class BreedingTests
     {
         Assert.Equal("Crowded 5/4", Status(Rules(love: 2, crowd: 5, partners: 2)));
         Assert.Equal("Crowded 4/4", Status(Rules(love: 2, crowd: 4, partners: 2)));
+    }
+
+    [Fact]
+    public void Crowded_says_who_is_nearest_in_the_way()
+    {
+        Breeding crowded = Rules(crowd: 5, partners: 2) with
+        {
+            NearestCrowder = "Lox Calf",
+            NearestCrowderDistance = 18.44f,
+        };
+
+        Assert.Equal("Crowded 5/4 · Lox Calf 18.4 m", Status(crowded));
     }
 
     [Fact]

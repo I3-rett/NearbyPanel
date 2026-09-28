@@ -49,6 +49,44 @@ internal static class DumpCommand
         foreach (NearbyEntity entity in rows)
         {
             Write(args, RowFormatter.Row(entity, scanner.Viewer, scanner.Forward, Plugin.DirectionFormat, Plugin.ProgressFormat));
+
+            if (entity.Breeding is { } breeding)
+            {
+                WriteBreeding(args, entity, breeding, scanner.Found);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Who the crowding and partner checks counted, and how far each is — the panel
+    /// only shows the total, which cannot be checked against the pen by eye.
+    /// </summary>
+    private static void WriteBreeding(
+        Terminal.ConsoleEventArgs args,
+        NearbyEntity self,
+        Breeding breeding,
+        IReadOnlyList<NearbyEntity> found)
+    {
+        Write(args, $"    {self.Prefab}: offspring {breeding.OffspringPrefab}, partner {breeding.PartnerPrefab}, "
+            + $"crowd {breeding.Crowd}/{breeding.MaxCrowd} in {breeding.CrowdRange:0.#} m, "
+            + $"partners {breeding.Partners} in {breeding.PartnerRange:0.#} m, love {breeding.LovePoints}/{breeding.RequiredLovePoints}");
+
+        foreach (NearbyEntity other in found)
+        {
+            if (other.Prefab != self.Prefab && other.Prefab != breeding.OffspringPrefab && other.Prefab != breeding.PartnerPrefab)
+            {
+                continue;
+            }
+
+            float distance = Geometry.Distance(self.Position, other.Position);
+            if (distance > breeding.CrowdRange + 10f)
+            {
+                continue;
+            }
+
+            string counted = distance <= breeding.CrowdRange ? "crowd" : "-";
+            Write(args, $"      {other.Name} {other.Prefab} 3d {distance:0.0} ground {Geometry.GroundDistance(self.Position, other.Position):0.0} "
+                + $"dy {other.Position.Y - self.Position.Y:+0.0;-0.0} ready {other.ReadyToMate} {counted}");
         }
     }
 

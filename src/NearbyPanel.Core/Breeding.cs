@@ -17,6 +17,11 @@ namespace NearbyPanel.Core;
 /// <param name="Hungry">The game skips love points while hungry, before any other check.</param>
 /// <param name="Crowd">Own kind plus offspring within <paramref name="CrowdRange"/>, self included.</param>
 /// <param name="Partners">Ready partners within <paramref name="PartnerRange"/>, self included when its own kind.</param>
+/// <param name="NearestCrowder">
+/// Name of the nearest animal counted in <paramref name="Crowd"/> that is not itself and
+/// not a partner it needs — the one to move first. Null when there is none.
+/// </param>
+/// <param name="NearestCrowderDistance">Its 3-D distance, in metres.</param>
 public sealed record Breeding(
     int LovePoints,
     int RequiredLovePoints,
@@ -32,7 +37,9 @@ public sealed record Breeding(
     float PartnerRange,
     bool Hungry,
     int? Crowd = null,
-    int? Partners = null)
+    int? Partners = null,
+    string? NearestCrowder = null,
+    float? NearestCrowderDistance = null)
 {
     /// <summary>0..1 of the way to term, or null when not pregnant or unknown.</summary>
     public float? PregnancyProgress =>
@@ -73,26 +80,46 @@ public static class BreedingRules
 
             int crowd = 0;
             int partners = 0;
+            NearbyEntity? nearest = null;
+            float nearestDistance = float.MaxValue;
 
             foreach (NearbyEntity other in found)
             {
                 float distance = Geometry.Distance(self.Position, other.Position);
 
+                bool partner = distance <= breeding.PartnerRange
+                    && other.Prefab == breeding.PartnerPrefab
+                    && other.ReadyToMate;
+
+                if (partner)
+                {
+                    partners++;
+                }
+
                 if (distance <= breeding.CrowdRange
                     && (other.Prefab == self.Prefab || other.Prefab == breeding.OffspringPrefab))
                 {
                     crowd++;
-                }
 
-                if (distance <= breeding.PartnerRange
-                    && other.Prefab == breeding.PartnerPrefab
-                    && other.ReadyToMate)
-                {
-                    partners++;
+                    // Moving a partner it needs would trade Crowded for No partner.
+                    if (!ReferenceEquals(other, self) && !partner && distance < nearestDistance)
+                    {
+                        nearest = other;
+                        nearestDistance = distance;
+                    }
                 }
             }
 
-            found[i] = self with { Breeding = breeding with { Crowd = crowd, Partners = partners } };
+            found[i] = self with
+            {
+                Breeding = breeding with
+                {
+                    Crowd = crowd,
+                    Partners = partners,
+                    NearestCrowder = nearest?.Name,
+                    NearestCrowderDistance = nearest != null ? nearestDistance : null,
+                },
+            };
         }
     }
 }

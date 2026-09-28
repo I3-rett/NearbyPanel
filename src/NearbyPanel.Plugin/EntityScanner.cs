@@ -20,6 +20,12 @@ internal sealed class EntityScanner
     /// <summary>Where the player faces, valid only after a successful scan.</summary>
     public Vec3 Forward { get; private set; }
 
+    /// <summary>
+    /// Everything the last scan read, before the radius, filter and cap — including
+    /// the breeding margin beyond the list. For the dump's breeding detail.
+    /// </summary>
+    public IReadOnlyList<NearbyEntity> Found => _found;
+
     /// <summary>True when the last scan hit an error and the rows may be stale.</summary>
     public bool Faulted { get; private set; }
 

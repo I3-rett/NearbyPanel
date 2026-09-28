@@ -161,7 +161,12 @@ public static class RowFormatter
 
         if (breeding.IsCrowded)
         {
-            return "Crowded " + Count(breeding.Crowd!.Value) + "/" + Count(breeding.MaxCrowd);
+            string crowded = "Crowded " + Count(breeding.Crowd!.Value) + "/" + Count(breeding.MaxCrowd);
+
+            // Who to move first: the total alone cannot be checked against the pen by eye.
+            return breeding.NearestCrowder is { } who && breeding.NearestCrowderDistance is { } metres
+                ? crowded + " · " + who + " " + Format(metres, "0.0") + " m"
+                : crowded;
         }
 
         if (breeding.LacksPartner)
