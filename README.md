@@ -7,7 +7,8 @@
 [![BepInEx](https://img.shields.io/badge/BepInEx-5.4.2351-lightgrey)](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
 
 A client-side Valheim mod. Press **N** for a list of the creatures around you: distance,
-direction, altitude, star rating, what each one has noticed, and live taming progress.
+direction, altitude, star rating, what each one has noticed, live taming and growth
+progress, and why a tamed animal is or is not breeding.
 
 Client-side only. The server does not need it, it will not stop you joining a server that
 does not have it, and players without it see nothing different.
