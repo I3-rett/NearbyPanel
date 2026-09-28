@@ -353,4 +353,86 @@ public class GameApiGuardTests
             && called.DeclaringType.Name == "ZDO"
             && called.Name.StartsWith("Set"));
     }
+
+    // ----- taming boost: EntityMapper.BoostedPlayers ----------------------
+
+    [Theory]
+    [InlineData("m_tamingSpeedMultiplierRange")]
+    [InlineData("m_tamingBoostMultiplier")]
+    public void Tameable_boost_settings_are_public_float_fields(string fieldName)
+    {
+        // Serialized per prefab: read off the live component, never hardcoded.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition field = GameAssembly.Field("Tameable", fieldName);
+
+        Assert.True(field.IsPublic);
+        Assert.Equal("Single", field.FieldType.Name);
+    }
+
+    [Fact]
+    public void Player_GetPlayersInRange_is_public_static()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method(
+            "Player", "GetPlayersInRange", "Vector3", "Single", "List`1");
+
+        Assert.True(method.IsPublic);
+        Assert.True(method.IsStatic);
+    }
+
+    [Fact]
+    public void Character_GetSEMan_is_public()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        Assert.True(GameAssembly.Method("Character", "GetSEMan").IsPublic);
+    }
+
+    [Fact]
+    public void SEMan_HaveStatusAttribute_is_a_public_pure_read()
+    {
+        // For a player this client does not own it reads s_seAttrib from the record,
+        // which is how a friend's brew is visible here. If it ever writes, stop calling it.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("SEMan", "HaveStatusAttribute", "StatusAttribute");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("Boolean", method.ReturnType.Name);
+        Assert.DoesNotContain(method.Body.Instructions, instruction =>
+            instruction.Operand is MethodReference called
+            && called.DeclaringType.Name == "ZDO"
+            && called.Name.StartsWith("Set"));
+    }
+
+    [Fact]
+    public void StatusAttribute_TamingBoost_is_still_eight()
+    {
+        // The value is compiled into the plugin, so a renumbering would silently test
+        // the wrong bit.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition attributes = GameAssembly.NestedType("StatusEffect", "StatusAttribute");
+        FieldDefinition boost = attributes.Fields.Single(f => f.Name == "TamingBoost");
+
+        Assert.True(attributes.IsNestedPublic);
+        Assert.Equal(8, (int)boost.Constant);
+    }
 }

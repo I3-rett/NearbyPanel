@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NearbyPanel.Core;
 using UnityEngine;
 
@@ -11,6 +12,9 @@ namespace NearbyPanel;
 /// </summary>
 internal static class EntityMapper
 {
+    // Reused: filled once per animal being tamed, four times a second.
+    private static readonly List<Player> NearbyPlayers = new();
+
     public static Vec3 ToVec3(Vector3 value) => new(value.x, value.y, value.z);
 
     /// <summary>
@@ -181,7 +185,37 @@ internal static class EntityMapper
         // Defaulting to the full duration means "no key written yet" reads as 0%,
         // which is what the game itself does.
         float remaining = Mathf.Clamp(zdo.GetFloat(ZDOVars.s_tameTimeLeft, total), 0f, total);
-        return (1f - (remaining / total), remaining);
+
+        // The stored seconds are unboosted: the game speeds up each tick instead, so
+        // the percentage stays as stored and only the time left is divided.
+        float left = TamingBoost.SecondsLeft(
+            remaining, BoostedPlayers(tameable), tameable.m_tamingBoostMultiplier);
+
+        return (1f - (remaining / total), left);
+    }
+
+    /// <summary>
+    /// Players within the animal's boost range carrying the TamingBoost attribute —
+    /// Brew of Animal Whispers — counted as <c>Tameable.DecreaseRemainingTime</c> does,
+    /// this player included. A friend's brew counts too: for a player this client does
+    /// not own, the attribute is read from the replicated record.
+    /// </summary>
+    private static int BoostedPlayers(Tameable tameable)
+    {
+        NearbyPlayers.Clear();
+        Player.GetPlayersInRange(
+            tameable.transform.position, tameable.m_tamingSpeedMultiplierRange, NearbyPlayers);
+
+        int boosted = 0;
+        foreach (Player player in NearbyPlayers)
+        {
+            if (player.GetSEMan().HaveStatusAttribute(StatusEffect.StatusAttribute.TamingBoost))
+            {
+                boosted++;
+            }
+        }
+
+        return boosted;
     }
 
     /// <summary>
