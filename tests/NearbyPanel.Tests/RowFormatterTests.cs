@@ -29,10 +29,10 @@ public class RowFormatterTests
     }
 
     [Theory]
-    [InlineData(1, "-")]      // an ordinary creature is level 1, which is no stars
+    [InlineData(1, "")]       // an ordinary creature is level 1, which is no stars
     [InlineData(2, "1")]
     [InlineData(3, "2")]
-    [InlineData(0, "-")]
+    [InlineData(0, "")]
     public void Stars_is_the_level_minus_one(int level, string expected)
     {
         Assert.Equal(expected, RowFormatter.Stars(level));
