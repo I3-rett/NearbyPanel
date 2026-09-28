@@ -322,12 +322,12 @@ public sealed class Plugin : BaseUnityPlugin
 
     /// <summary>
     /// A width in pixels for every column but STATUS, which takes what is left of the
-    /// panel. Defaults suit the default font size 20 at width 700; they do not scale
+    /// panel. Defaults were calibrated in game at font size 20; they do not scale
     /// with the font, so a larger font needs wider columns. 0 hides a column.
     /// </summary>
     private void BindColumnWidths()
     {
-        float[] defaults = { 140f, 60f, 64f, 48f, 28f, 72f };
+        float[] defaults = { 120f, 60f, 64f, 64f, 28f, 80f };
 
         // ASCII keys: the cfg file is edited by hand too, and "★ width" is hard to type.
         string[] names = { "NAME", "DIST", "DIR", "ALT", "Stars", "ALERT" };
