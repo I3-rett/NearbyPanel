@@ -22,6 +22,9 @@ namespace NearbyPanel.Core;
 /// not a partner it needs — the one to move first. Null when there is none.
 /// </param>
 /// <param name="NearestCrowderDistance">Its 3-D distance, in metres.</param>
+/// <param name="PartnerHungry">A partner in reach is not ready only because it is hungry: feed it.</param>
+/// <param name="PartnerPregnant">A partner in reach is not ready only because it is pregnant: wait.</param>
+/// <param name="PartnerPregnancySecondsLeft">Until the soonest of those gives birth, when known.</param>
 public sealed record Breeding(
     int LovePoints,
     int RequiredLovePoints,
@@ -39,7 +42,10 @@ public sealed record Breeding(
     int? Crowd = null,
     int? Partners = null,
     string? NearestCrowder = null,
-    float? NearestCrowderDistance = null)
+    float? NearestCrowderDistance = null,
+    bool PartnerHungry = false,
+    bool PartnerPregnant = false,
+    float? PartnerPregnancySecondsLeft = null)
 {
     /// <summary>0..1 of the way to term, or null when not pregnant or unknown.</summary>
     public float? PregnancyProgress =>
@@ -113,6 +119,9 @@ public static class BreedingRules
             int partners = 0;
             NearbyEntity? nearest = null;
             float nearestDistance = float.MaxValue;
+            bool partnerHungry = false;
+            bool partnerPregnant = false;
+            float? partnerLeft = null;
 
             foreach (NearbyEntity other in found)
             {
@@ -125,6 +134,26 @@ public static class BreedingRules
                 if (partner)
                 {
                     partners++;
+                }
+                else if (distance <= breeding.PartnerRange
+                    && other.Prefab == breeding.PartnerPrefab
+                    && !ReferenceEquals(other, self)
+                    && other.Breeding is { } theirs)
+                {
+                    // A partner that will be ready is not a missing one. Pregnancy is
+                    // checked first: a pregnant animal is unready whatever its hunger.
+                    if (theirs.Pregnant)
+                    {
+                        partnerPregnant = true;
+                        if (theirs.PregnancySecondsLeft is { } left && (partnerLeft == null || left < partnerLeft))
+                        {
+                            partnerLeft = left;
+                        }
+                    }
+                    else if (theirs.Hungry)
+                    {
+                        partnerHungry = true;
+                    }
                 }
 
                 if (distance <= breeding.CrowdRange
@@ -149,6 +178,9 @@ public static class BreedingRules
                     Partners = partners,
                     NearestCrowder = nearest?.Name,
                     NearestCrowderDistance = nearest != null ? nearestDistance : null,
+                    PartnerHungry = partnerHungry,
+                    PartnerPregnant = partnerPregnant,
+                    PartnerPregnancySecondsLeft = partnerLeft,
                 },
             };
         }

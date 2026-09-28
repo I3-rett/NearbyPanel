@@ -171,6 +171,20 @@ public static class RowFormatter
 
         if (breeding.LacksPartner)
         {
+            // Feeding fixes a hungry partner now; a pregnant one only needs waiting
+            // for. Either way there is a partner, which "No partner" would deny.
+            if (breeding.PartnerHungry)
+            {
+                return "Partner hungry";
+            }
+
+            if (breeding.PartnerPregnant)
+            {
+                return breeding.PartnerPregnancySecondsLeft is not { } left ? "Partner pregnant"
+                    : left <= 0f ? "Partner pregnant, due"
+                    : "Partner pregnant · " + Duration(left);
+            }
+
             return "No partner";
         }
 

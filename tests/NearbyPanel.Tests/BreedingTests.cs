@@ -273,6 +273,92 @@ public class BreedingTests
     }
 
     [Fact]
+    public void A_pregnant_partner_is_waited_for_not_missing()
+    {
+        // MAMA while PAPA is pregnant: the only partner in reach is not ready, but
+        // will be after the birth. Nothing to bring; just wait.
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules(), name: "MAMA"),
+            Animal(Boar, 2f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: 45f), name: "PAPA"),
+        };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("Partner pregnant · 45 s", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
+    public void The_partner_nearest_to_giving_birth_sets_the_wait()
+    {
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules(), name: "MAMA"),
+            Animal(Boar, 2f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: 50f)),
+            Animal(Boar, 1f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: 20f)),
+        };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("Partner pregnant · 20 s", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
+    public void A_partner_past_its_term_reads_due()
+    {
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules()),
+            Animal(Boar, 2f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: -3f)),
+        };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("Partner pregnant, due", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
+    public void A_hungry_partner_says_to_feed_it()
+    {
+        // Feeding fixes it now, so it outranks waiting for a birth.
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules()),
+            Animal(Boar, 2f, ready: false, breeding: Rules(hungry: true)),
+            Animal(Boar, 1f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: 20f)),
+        };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("Partner hungry", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
+    public void An_unready_partner_out_of_reach_is_still_no_partner()
+    {
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 0f, breeding: Rules()),
+            Animal(Boar, 5f, ready: false, breeding: Rules(pregnant: true, pregnancyLeft: 20f)),
+        };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("No partner", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
+    public void A_wild_animal_of_its_kind_is_no_partner()
+    {
+        // Untamed: not ready, and nothing to wait for.
+        List<NearbyEntity> found = new() { Animal(Boar, 0f, breeding: Rules()), Animal(Boar, 1f, ready: false) };
+
+        BreedingRules.Resolve(found);
+
+        Assert.Equal("No partner", RowFormatter.StatusText(found[0]));
+    }
+
+    [Fact]
     public void A_separate_partner_needs_only_one()
     {
         Assert.Equal("Love 0/4", Status(Rules(separatePartner: true, crowd: 1, partners: 1)));
