@@ -27,7 +27,9 @@ public static class RowFormatter
         new("DIR", 5, RightAligned: true),
         new("ALT", 4, RightAligned: true),
         new("★", 2, RightAligned: true),
-        new("AI", 4, RightAligned: false),
+        // Was "AI", which sat against "★" and read as one heading, "★ AI". A word
+        // says what the marks under it mean; 5 wide so the heading is not truncated.
+        new("ALERT", 5, RightAligned: false),
         new("STATUS", 0, RightAligned: false),
     };
 
@@ -148,7 +150,7 @@ public static class RowFormatter
     }
 
     /// <summary>
-    /// The AI column. "!you" only when the game can actually say so: a creature's
+    /// The ALERT column. "!you" only when the game can actually say so: a creature's
     /// target is held by the peer simulating it, so for anything owned by the
     /// server or another player the answer is unknown, and unknown is shown as a
     /// plain alert rather than as safety.
@@ -163,11 +165,13 @@ public static class RowFormatter
     /// <summary>
     /// Star rating, which is the creature's level minus one — vanilla stores an
     /// ordinary creature at level 1 and every star display in the game subtracts one.
+    /// No stars is blank, as the game shows none: a "-" here stood beside the calm
+    /// "-" of the ALERT column and the pair read as one mark.
     /// </summary>
     public static string Stars(int level)
     {
         int stars = level - 1;
-        return stars <= 0 ? "-" : stars.ToString(CultureInfo.InvariantCulture);
+        return stars <= 0 ? string.Empty : stars.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <summary>

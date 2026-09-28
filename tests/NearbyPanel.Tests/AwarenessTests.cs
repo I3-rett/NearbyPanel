@@ -17,13 +17,23 @@ public class AwarenessTests
 
     private static RowCells CellsFor(NearbyEntity entity) => RowFormatter.Cells(entity, Viewer, North);
 
-    // ----- the AI column ---------------------------------------------------
+    // ----- the ALERT column ------------------------------------------------
 
     [Fact]
     public void A_calm_creature_shows_a_dash()
     {
         // The deer that has not noticed you.
         Assert.Equal("-", CellsFor(Creature()).Awareness);
+    }
+
+    [Fact]
+    public void A_calm_ordinary_creature_does_not_read_as_two_dashes()
+    {
+        // The breeding-pen screenshot: "- -" under "★ AI", which nobody could split
+        // into a star rating and an awareness mark.
+        string row = RowFormatter.Row(Creature(), Viewer, North);
+
+        Assert.DoesNotContain("- -", row);
     }
 
     [Fact]
@@ -109,7 +119,7 @@ public class AwarenessTests
     // ----- layout ----------------------------------------------------------
 
     [Fact]
-    public void The_AI_column_is_wide_enough_for_its_longest_value()
+    public void The_ALERT_column_is_wide_enough_for_its_longest_value()
     {
         NearbyEntity squito = Creature(Awareness.Alerted, hostile: true, targetsYou: true, name: "Deathsquito");
 

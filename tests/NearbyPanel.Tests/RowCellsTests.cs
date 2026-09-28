@@ -54,7 +54,9 @@ public class RowCellsTests
         NearbyEntity ordinary = new("A", EntityKind.Creature, new Vec3(0f, 0f, 5f), 1, null, null);
         NearbyEntity oneStar = new("B", EntityKind.Creature, new Vec3(0f, 0f, 5f), 2, null, null);
 
-        Assert.Equal("-", CellsFor(ordinary).Level);
+        // Blank, not "-": beside the calm awareness "-" it read as "- -", one
+        // mark nobody could place under either heading.
+        Assert.Equal(string.Empty, CellsFor(ordinary).Level);
         Assert.Equal("1", CellsFor(oneStar).Level);
     }
 
@@ -114,7 +116,7 @@ public class RowCellsTests
         // PanelView fills a fixed array in this order; if a column is added there
         // and not here, the panel draws a value under the wrong heading.
         Assert.Equal(
-            new[] { "NAME", "DIST", "DIR", "ALT", "★", "AI", "STATUS" },
+            new[] { "NAME", "DIST", "DIR", "ALT", "★", "ALERT", "STATUS" },
             RowFormatter.ColumnNames);
     }
 }
