@@ -17,6 +17,13 @@ internal static class Tuning
     /// </summary>
     public const float ScanRadius = 50f;
 
+    /// <summary>
+    /// Extra metres scanned beyond <see cref="ScanRadius"/>, never listed, only so the
+    /// crowding check can see a whole pen: vanilla counts within 10 m. A mod that
+    /// widens <c>m_totalCheckRange</c> past this undercounts only at the list's edge.
+    /// </summary>
+    public const float BreedingReach = 10f;
+
     /// <summary>Most rows ever listed, closest first.</summary>
     public const int MaxRows = 25;
 

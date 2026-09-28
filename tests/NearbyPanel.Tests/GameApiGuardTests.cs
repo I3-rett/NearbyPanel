@@ -261,4 +261,96 @@ public class GameApiGuardTests
 
         Assert.True(writes, "BaseAI.GetTimeSinceSpawned no longer writes; EntityMapper can call it directly.");
     }
+
+    // ----- breeding: EntityMapper.BreedingOf ------------------------------
+
+    [Fact]
+    public void Procreation_is_a_public_component()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition type = GameAssembly.Type("Procreation");
+
+        Assert.True(type.IsPublic);
+        Assert.Equal("MonoBehaviour", type.BaseType.Name);
+    }
+
+    [Theory]
+    [InlineData("m_totalCheckRange", "Single")]
+    [InlineData("m_maxCreatures", "Int32")]
+    [InlineData("m_partnerCheckRange", "Single")]
+    [InlineData("m_pregnancyDuration", "Single")]
+    [InlineData("m_requiredLovePoints", "Int32")]
+    [InlineData("m_offspring", "GameObject")]
+    [InlineData("m_seperatePartner", "GameObject")]
+    [InlineData("m_noPartnerOffspring", "GameObject")]
+    public void Procreation_rules_are_public_fields(string fieldName, string typeName)
+    {
+        // Serialized per prefab, so read off the live component, never hardcoded.
+        // "seperate" is the game's own spelling.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition field = GameAssembly.Field("Procreation", fieldName);
+
+        Assert.True(field.IsPublic);
+        Assert.Equal(typeName, field.FieldType.Name);
+    }
+
+    [Theory]
+    [InlineData("s_lovePoints")]
+    [InlineData("s_pregnant")]
+    public void ZDOVars_breeding_keys_are_public_static_ints(string fieldName)
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition field = GameAssembly.Field("ZDOVars", fieldName);
+
+        Assert.True(field.IsPublic);
+        Assert.True(field.IsStatic);
+        Assert.Equal("Int32", field.FieldType.Name);
+    }
+
+    [Fact]
+    public void ZDO_GetInt_takes_a_hash_and_a_default()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("ZDO", "GetInt", "Int32", "Int32");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("Int32", method.ReturnType.Name);
+    }
+
+    [Fact]
+    public void Procreation_ReadyForProcreation_is_a_public_pure_read()
+    {
+        // Called on every breeding animal in range. In 1.0.16 it only reads: IsTamed
+        // refreshes a local cache, IsPregnant and IsHungry read the record. If it ever
+        // starts writing, this mod would author world state — stop calling it.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Procreation", "ReadyForProcreation");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("Boolean", method.ReturnType.Name);
+        Assert.DoesNotContain(method.Body.Instructions, instruction =>
+            instruction.Operand is MethodReference called
+            && called.DeclaringType.Name == "ZDO"
+            && called.Name.StartsWith("Set"));
+    }
 }

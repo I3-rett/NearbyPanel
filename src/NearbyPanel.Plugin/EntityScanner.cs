@@ -52,7 +52,10 @@ internal sealed class EntityScanner
         try
         {
             // Cleared first: the game appends to this list rather than replacing it.
-            Character.GetCharactersInRange(transform.position, Tuning.ScanRadius, _characters);
+            // Wider than the list by the breeding reach, so an animal near the edge is
+            // counted against its whole pen; Build still cuts the rows at ScanRadius.
+            Character.GetCharactersInRange(
+                transform.position, Tuning.ScanRadius + Tuning.BreedingReach, _characters);
         }
         catch (Exception error)
         {
@@ -74,6 +77,15 @@ internal sealed class EntityScanner
             {
                 Fault("could not read a creature", error);
             }
+        }
+
+        try
+        {
+            BreedingRules.Resolve(_found);
+        }
+        catch (Exception error)
+        {
+            Fault("could not work out breeding", error);
         }
 
         try
