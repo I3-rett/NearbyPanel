@@ -20,6 +20,12 @@ internal sealed class EntityScanner
     /// <summary>Where the player faces, valid only after a successful scan.</summary>
     public Vec3 Forward { get; private set; }
 
+    /// <summary>
+    /// Everything the last scan read, before the radius, filter and cap — including
+    /// the breeding margin beyond the list. For the dump's breeding detail.
+    /// </summary>
+    public IReadOnlyList<NearbyEntity> Found => _found;
+
     /// <summary>True when the last scan hit an error and the rows may be stale.</summary>
     public bool Faulted { get; private set; }
 
@@ -60,20 +66,34 @@ internal sealed class EntityScanner
             return Array.Empty<NearbyEntity>();
         }
 
-        foreach (Character character in _characters)
+        MapAll(transform.position, minimumDistance: 0f);
+
+        // A second, wider pass so an animal near the edge of the list is counted
+        // against its whole pen. How much wider comes from the animals themselves:
+        // each species carries its own breeding ranges. Only the ring beyond the first
+        // pass is read again, and Build still cuts the rows at ScanRadius.
+        try
         {
-            try
+            float reach = BreedingRules.Reach(_found, Viewer, Tuning.ScanRadius);
+            if (reach > 0f)
             {
-                NearbyEntity? entity = EntityMapper.FromCharacter(character);
-                if (entity != null)
-                {
-                    _found.Add(entity);
-                }
+                _characters.Clear();
+                Character.GetCharactersInRange(transform.position, Tuning.ScanRadius + reach, _characters);
+                MapAll(transform.position, minimumDistance: Tuning.ScanRadius);
             }
-            catch (Exception error)
-            {
-                Fault("could not read a creature", error);
-            }
+        }
+        catch (Exception error)
+        {
+            Fault("breeding range query failed", error);
+        }
+
+        try
+        {
+            BreedingRules.Resolve(_found);
+        }
+        catch (Exception error)
+        {
+            Fault("could not work out breeding", error);
         }
 
         try
@@ -84,6 +104,36 @@ internal sealed class EntityScanner
         {
             Fault("could not build the list", error);
             return Array.Empty<NearbyEntity>();
+        }
+    }
+
+    /// <summary>
+    /// Maps every queried character at least <paramref name="minimumDistance"/> away,
+    /// with the game's own comparison, so the second pass never re-reads the first.
+    /// </summary>
+    private void MapAll(Vector3 viewer, float minimumDistance)
+    {
+        float minimumSqr = minimumDistance * minimumDistance;
+
+        foreach (Character character in _characters)
+        {
+            try
+            {
+                if (minimumDistance > 0f && (character.transform.position - viewer).sqrMagnitude < minimumSqr)
+                {
+                    continue;
+                }
+
+                NearbyEntity? entity = EntityMapper.FromCharacter(character);
+                if (entity != null)
+                {
+                    _found.Add(entity);
+                }
+            }
+            catch (Exception error)
+            {
+                Fault("could not read a creature", error);
+            }
         }
     }
 

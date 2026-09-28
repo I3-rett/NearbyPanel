@@ -39,6 +39,7 @@ internal static class EntityMapper
         string? given = GivenName(tameable);
         (float? taming, float? tamingLeft) = Taming(tameable);
         (float? growth, float? growthLeft) = Growth(character);
+        Procreation procreation = character.GetComponent<Procreation>();
 
         return new NearbyEntity(
             Name: given ?? Localize(character.m_name),
@@ -56,7 +57,64 @@ internal static class EntityMapper
             GrowthProgress: growth,
             HasGivenName: given != null,
             TamingSecondsLeft: tamingLeft,
-            GrowthSecondsLeft: growthLeft);
+            GrowthSecondsLeft: growthLeft,
+            // The name the game compares when it counts a pen: prefab name + "(Clone)".
+            Prefab: character.gameObject.name,
+            // The game counts a partner without a Procreation component as ready.
+            ReadyToMate: procreation == null || procreation.ReadyForProcreation(),
+            Breeding: BreedingOf(procreation, tameable));
+    }
+
+    /// <summary>
+    /// What <c>Procreation.Procreate</c> works from, for a tamed adult that breeds;
+    /// null for anything else, since the game only runs it once an animal is tamed.
+    /// Love points and the pregnancy stamp are read from the record, so this holds for
+    /// animals another peer simulates. Crowding and the partner check are stored
+    /// nowhere; <see cref="BreedingRules.Resolve"/> recomputes them afterwards.
+    /// </summary>
+    private static Breeding? BreedingOf(Procreation? procreation, Tameable? tameable)
+    {
+        if (procreation == null || tameable == null || !tameable.IsTamed() || procreation.m_offspring == null)
+        {
+            return null;
+        }
+
+        ZDO? zdo = ZdoOf(procreation);
+        if (zdo == null)
+        {
+            return null;
+        }
+
+        // Zero is the game's own "not pregnant"; anything else is the tick it began.
+        long since = zdo.GetLong(ZDOVars.s_pregnant, 0L);
+        bool pregnant = since != 0L;
+        float? left = null;
+
+        if (pregnant && ZNet.instance != null && since > 0L && since <= DateTime.MaxValue.Ticks)
+        {
+            double elapsed = (ZNet.instance.GetTime() - new DateTime(since)).TotalSeconds;
+            if (!double.IsNaN(elapsed))
+            {
+                left = (float)(procreation.m_pregnancyDuration - elapsed);
+            }
+        }
+
+        GameObject? partner = procreation.m_seperatePartner;
+
+        return new Breeding(
+            LovePoints: zdo.GetInt(ZDOVars.s_lovePoints, 0),
+            RequiredLovePoints: procreation.m_requiredLovePoints,
+            Pregnant: pregnant,
+            PregnancySecondsLeft: left,
+            PregnancyDuration: procreation.m_pregnancyDuration,
+            OffspringPrefab: procreation.m_offspring.name + "(Clone)",
+            PartnerPrefab: partner != null ? partner.name + "(Clone)" : procreation.gameObject.name,
+            SeparatePartner: partner != null,
+            NeedsPartner: procreation.m_noPartnerOffspring == null,
+            CrowdRange: procreation.m_totalCheckRange,
+            MaxCrowd: procreation.m_maxCreatures,
+            PartnerRange: procreation.m_partnerCheckRange,
+            Hungry: tameable.IsHungry());
     }
 
     /// <summary>

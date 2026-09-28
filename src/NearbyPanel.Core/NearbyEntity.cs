@@ -30,6 +30,15 @@ namespace NearbyPanel.Core;
 /// Seconds until a young animal becomes an adult, alongside
 /// <paramref name="GrowthProgress"/>; null when unknown.
 /// </param>
+/// <param name="Prefab">
+/// The game object's instance name, e.g. <c>Boar(Clone)</c> — how the game itself
+/// tells one kind from another when it counts a pen. Null when unknown.
+/// </param>
+/// <param name="ReadyToMate">
+/// Whether it would count as a partner: tamed, not pregnant, not hungry. True for a
+/// creature that does not breed at all, as the game counts those too.
+/// </param>
+/// <param name="Breeding">Love, pregnancy and the breeding checks; null for anything that does not breed.</param>
 /// <param name="HasGivenName">
 /// True when a player has named it, so <paramref name="Name"/> is that name rather
 /// than the species. Named animals are the ones people come looking for.
@@ -47,4 +56,7 @@ public sealed record NearbyEntity(
     float? GrowthProgress = null,
     bool HasGivenName = false,
     float? TamingSecondsLeft = null,
-    float? GrowthSecondsLeft = null);
+    float? GrowthSecondsLeft = null,
+    string? Prefab = null,
+    bool ReadyToMate = true,
+    Breeding? Breeding = null);

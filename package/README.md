@@ -47,6 +47,23 @@ Edit it with a text editor, or in game with Configuration Manager. The settings 
 people want are the toggle key, the screen corner the panel is pinned to, and the
 direction format.
 
+## Console commands
+
+Both need Valheim's console, which is off by default: enable it in the game's settings, or
+add `-console` to the launch parameters (r2modman: **Settings → Launch parameters**). Then
+press **F5** in game.
+
+- `nearby_filter <text>` shows only creatures whose name contains the text, e.g.
+  `nearby_filter lox`. With no argument it clears the filter. Also a setting.
+- `nearby_dump` writes the list as the panel shows it, same filter, to the console and to
+  `BepInEx/LogOutput.log`. Under each animal that breeds it adds what the breeding checks
+  counted: its ranges, and every animal considered with its 3-D and ground distance, height
+  and whether it is ready to mate. That is the place to look when a pen reads `Crowded` or
+  `No partner` and you cannot see why.
+
+Neither marks your character as having used cheats. When reporting a bug, attach
+`LogOutput.log` with a `nearby_dump` taken at the moment it happened.
+
 ## Compatibility
 
 - No Harmony patches, no RPC, and nothing is ever written to the world, so removing the
