@@ -64,6 +64,37 @@ public sealed record Breeding(
 public static class BreedingRules
 {
     /// <summary>
+    /// How far beyond the list the scan must look so every listed breeding animal is
+    /// counted against its whole pen: the widest crowding or partner range among those
+    /// within <paramref name="radius"/>. Ranges are serialized per species — 20 m for a
+    /// lox — so this is read from the animals, never assumed. Zero when none breeds.
+    /// </summary>
+    public static float Reach(IEnumerable<NearbyEntity> found, Vec3 viewer, float radius)
+    {
+        float reach = 0f;
+
+        foreach (NearbyEntity entity in found)
+        {
+            if (entity.Breeding is not { } breeding || Geometry.Distance(viewer, entity.Position) > radius)
+            {
+                continue;
+            }
+
+            if (breeding.CrowdRange > reach)
+            {
+                reach = breeding.CrowdRange;
+            }
+
+            if (breeding.PartnerRange > reach)
+            {
+                reach = breeding.PartnerRange;
+            }
+        }
+
+        return reach;
+    }
+
+    /// <summary>
     /// Fills <see cref="Breeding.Crowd"/> and <see cref="Breeding.Partners"/> for every
     /// creature in <paramref name="found"/> that breeds, counting against all of
     /// <paramref name="found"/>. In place: the scanner reuses its list every refresh.

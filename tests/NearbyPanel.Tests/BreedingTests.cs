@@ -148,6 +148,53 @@ public class BreedingTests
         Assert.Null(Resolved(found, 0).NearestCrowder);
     }
 
+    // ----- reach -----------------------------------------------------------
+
+    private static readonly Vec3 Viewer = new(0f, 0f, 0f);
+
+    [Fact]
+    public void Reach_is_the_widest_range_of_any_listed_breeding_animal()
+    {
+        // Each species carries its own ranges: the lox counts within 20 m.
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 10f, breeding: Rules()),
+            Animal("Lox(Clone)", 30f, breeding: Rules() with { CrowdRange = 20f, PartnerRange = 8f }),
+            Animal(Piglet, 5f),
+        };
+
+        Assert.Equal(20f, BreedingRules.Reach(found, Viewer, radius: 50f));
+    }
+
+    [Fact]
+    public void Reach_takes_the_partner_range_when_it_is_the_wider()
+    {
+        List<NearbyEntity> found = new() { Animal(Boar, 10f, breeding: Rules() with { PartnerRange = 12f }) };
+
+        Assert.Equal(12f, BreedingRules.Reach(found, Viewer, radius: 50f));
+    }
+
+    [Fact]
+    public void Reach_ignores_animals_outside_the_list()
+    {
+        // Their counts are never shown, so they need no margin.
+        List<NearbyEntity> found = new()
+        {
+            Animal(Boar, 10f, breeding: Rules()),
+            Animal("Lox(Clone)", 55f, breeding: Rules() with { CrowdRange = 20f }),
+        };
+
+        Assert.Equal(10f, BreedingRules.Reach(found, Viewer, radius: 50f));
+    }
+
+    [Fact]
+    public void Reach_is_zero_when_nothing_listed_breeds()
+    {
+        List<NearbyEntity> found = new() { Animal(Piglet, 5f), Animal("Wolf(Clone)", 8f) };
+
+        Assert.Equal(0f, BreedingRules.Reach(found, Viewer, radius: 50f));
+    }
+
     // ----- partner ---------------------------------------------------------
 
     [Fact]
