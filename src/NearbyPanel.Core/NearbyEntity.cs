@@ -7,6 +7,11 @@ namespace NearbyPanel.Core;
 /// (for tameables, the game's own $hud_tame* wording).
 /// </summary>
 /// <param name="TamingProgress">0..1 while taming is under way, null otherwise.</param>
+/// <param name="GrowthProgress">
+/// 0..1 while a young animal is growing towards its adult form, null when it has no
+/// growth stage or the record cannot answer yet. Shares the status column with
+/// <paramref name="TamingProgress"/>: a creature reports one percentage at a time.
+/// </param>
 /// <param name="Awareness">Whether it has noticed anything. Replicated, so always readable.</param>
 /// <param name="Hostile">Whether it would attack you, from factions and aggravation.</param>
 /// <param name="TargetsYou">
@@ -25,4 +30,5 @@ public sealed record NearbyEntity(
     float? TamingProgress,
     Awareness Awareness = Awareness.Calm,
     bool Hostile = false,
-    bool? TargetsYou = null);
+    bool? TargetsYou = null,
+    float? GrowthProgress = null);

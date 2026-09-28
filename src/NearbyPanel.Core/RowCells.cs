@@ -10,10 +10,10 @@ namespace NearbyPanel.Core;
 /// cell at its own pixel offset instead. Sharing the cells rather than the
 /// formatted line keeps the two honest with each other.
 /// </summary>
-/// <param name="Taming">
-/// Whether this row is an animal with taming under way. Carried as a flag rather
-/// than left for the panel to infer from the text, so highlighting it does not
-/// depend on searching the status string for a percent sign.
+/// <param name="Progress">
+/// Whether the status cell carries a percentage — taming under way, or a young
+/// animal growing. Carried as a flag rather than left for the panel to infer from
+/// the text, so highlighting it does not depend on searching for a percent sign.
 /// </param>
 /// <param name="Awareness">The AI column: calm, tracking, alerted, or alerted at you.</param>
 /// <param name="Threat">
@@ -28,5 +28,5 @@ public sealed record RowCells(
     string Level,
     string Awareness,
     string Status,
-    bool Taming = false,
+    bool Progress = false,
     bool Threat = false);

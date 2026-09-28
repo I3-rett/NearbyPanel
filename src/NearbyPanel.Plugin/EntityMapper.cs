@@ -1,3 +1,4 @@
+using System;
 using NearbyPanel.Core;
 using UnityEngine;
 
@@ -48,7 +49,8 @@ internal static class EntityMapper
             TamingProgress: TamingProgress(tameable),
             Awareness: AwarenessOf(ai),
             Hostile: IsHostileToPlayer(ai),
-            TargetsYou: TargetsLocalPlayer(character, ai));
+            TargetsYou: TargetsLocalPlayer(character, ai),
+            GrowthProgress: GrowthProgress(character));
     }
 
     /// <summary>
@@ -115,6 +117,61 @@ internal static class EntityMapper
         // which is what the game itself does.
         float remaining = zdo.GetFloat(ZDOVars.s_tameTimeLeft, total);
         return 1f - Mathf.Clamp01(remaining / total);
+    }
+
+    /// <summary>
+    /// How far a young animal is towards its adult form, 0..1, or null when there is
+    /// nothing to report — no growth stage, or no birth time in the record yet.
+    ///
+    /// <c>Growup.GrowUpdate</c> does nothing but compare the time since the creature
+    /// spawned against <c>m_growTime</c>, so the same two numbers give the progress.
+    /// Both are readable without owning the creature: the birth instant is a long in
+    /// the network record, and the clock is network time, shared by everyone.
+    ///
+    /// Deliberately not via <c>BaseAI.GetTimeSinceSpawned()</c>. That method writes:
+    /// when the key is unset it stamps the current time into the record and returns
+    /// zero. Calling it would make this mod author world state, and would reset the
+    /// growth of any creature whose birth time had not yet been recorded. The same
+    /// trap as <c>Character.GetHoverName()</c> — read the record instead.
+    /// </summary>
+    private static float? GrowthProgress(Character character)
+    {
+        Growup growup = character.GetComponent<Growup>();
+        if (growup == null)
+        {
+            return null;
+        }
+
+        // m_growTime is serialized per prefab, so it must be read off the live
+        // component and never hardcoded.
+        float total = growup.m_growTime;
+        if (total <= 0f)
+        {
+            return null;
+        }
+
+        ZDO? zdo = ZdoOf(growup);
+        if (zdo == null || ZNet.instance == null)
+        {
+            return null;
+        }
+
+        // Zero means no peer has stamped a birth time yet, which is unknown rather
+        // than "just born": the game writes it in BaseAI.Awake, and only once, so a
+        // value we can read is a value that will not move under us.
+        long born = zdo.GetLong(ZDOVars.s_spawnTime, 0L);
+        if (born <= 0L || born > DateTime.MaxValue.Ticks)
+        {
+            return null;
+        }
+
+        double elapsed = (ZNet.instance.GetTime() - new DateTime(born)).TotalSeconds;
+        if (double.IsNaN(elapsed))
+        {
+            return null;
+        }
+
+        return Mathf.Clamp01((float)(elapsed / total));
     }
 
     /// <summary>
