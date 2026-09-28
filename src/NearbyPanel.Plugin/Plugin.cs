@@ -29,7 +29,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     /// <summary>The STATUS progress format the panel is using, so the dump matches it.</summary>
     internal static ProgressFormat ProgressFormat =>
-        _progressFormat == null ? Core.ProgressFormat.Percent : _progressFormat.Value;
+        _progressFormat == null ? Core.ProgressFormat.Both : _progressFormat.Value;
 
     private static ConfigEntry<ProgressFormat> _progressFormat = null!;
 
@@ -134,9 +134,9 @@ public sealed class Plugin : BaseUnityPlugin
         _progressFormat = Config.Bind(
             "Panel",
             "Progress format",
-            ProgressFormat.Percent,
+            ProgressFormat.Both,
             new ConfigDescription(
-                "How taming and growth read in STATUS. Percent: how far along, 42%. "
+                "How taming, growth and pregnancy read in STATUS. Percent: how far along, 42%. "
                 + "Time: how long is left, 4 min. Taming time only counts down while the "
                 + "animal is fed, so it reads '4 min fed'. Both: 42% · 4 min fed.",
                 null,
