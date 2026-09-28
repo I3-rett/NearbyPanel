@@ -36,9 +36,10 @@ internal static class EntityMapper
             : tameable != null ? EntityKind.Tameable : EntityKind.Creature;
 
         BaseAI ai = character.GetBaseAI();
+        string? given = GivenName(tameable);
 
         return new NearbyEntity(
-            Name: NameOf(character, tameable),
+            Name: given ?? Localize(character.m_name),
             Kind: kind,
             // transform.position, not GetCenterPoint(): the viewer is measured at the
             // player's feet, and comparing feet against a collider centre made the
@@ -50,12 +51,13 @@ internal static class EntityMapper
             Awareness: AwarenessOf(ai),
             Hostile: IsHostileToPlayer(ai),
             TargetsYou: TargetsLocalPlayer(character, ai),
-            GrowthProgress: GrowthProgress(character));
+            GrowthProgress: GrowthProgress(character),
+            HasGivenName: given != null);
     }
 
     /// <summary>
-    /// What to call this creature: its given name if it has been named, otherwise
-    /// its species.
+    /// The name a player gave this creature, or null when it has none — in which
+    /// case the row shows the species, and the creature does not count as named.
     ///
     /// The name is read out of the network record directly rather than through
     /// <c>Character.GetHoverName()</c>, which for a tamed animal reaches
@@ -64,7 +66,7 @@ internal static class EntityMapper
     /// mod only reads. It also avoids localizing an already-localized string, which
     /// pollutes the game's translation cache with identity entries.
     /// </summary>
-    private static string NameOf(Character character, Tameable? tameable)
+    private static string? GivenName(Tameable? tameable)
     {
         if (tameable != null && tameable.IsTamed())
         {
@@ -79,7 +81,7 @@ internal static class EntityMapper
             }
         }
 
-        return Localize(character.m_name);
+        return null;
     }
 
     /// <summary>

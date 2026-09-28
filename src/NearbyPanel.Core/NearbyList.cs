@@ -21,13 +21,18 @@ public static class NearbyList
     /// towards something.
     ///
     /// Ties break on name, so the list does not flicker between refreshes.
+    ///
+    /// With <paramref name="namedFirst"/>, animals a player has named come before the
+    /// rest, each group still nearest-first. The ordering happens before the cap, so a
+    /// named animal is never the one cut off by a crowd of unnamed ones nearer by.
     /// </summary>
     public static IReadOnlyList<NearbyEntity> Build(
         IEnumerable<NearbyEntity> found,
         Vec3 viewer,
         float radius,
         int limit,
-        Func<NearbyEntity, bool>? include = null)
+        Func<NearbyEntity, bool>? include = null,
+        bool namedFirst = false)
     {
         IEnumerable<NearbyEntity> query = found
             .Where(e => Geometry.Distance(viewer, e.Position) <= radius);
@@ -38,7 +43,8 @@ public static class NearbyList
         }
 
         return query
-            .OrderBy(e => Geometry.Distance(viewer, e.Position))
+            .OrderBy(e => namedFirst && !e.HasGivenName)
+            .ThenBy(e => Geometry.Distance(viewer, e.Position))
             .ThenBy(e => e.Name, StringComparer.Ordinal)
             .Take(limit)
             .ToList();

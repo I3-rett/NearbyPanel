@@ -32,7 +32,7 @@ internal sealed class EntityScanner
     /// to abort the whole scan: one bad prefab should not take the panel down, and
     /// an unguarded throw here would repeat four times a second forever.
     /// </summary>
-    public IReadOnlyList<NearbyEntity> Scan(Func<NearbyEntity, bool>? include = null)
+    public IReadOnlyList<NearbyEntity> Scan(Func<NearbyEntity, bool>? include = null, bool namedFirst = false)
     {
         Player player = Player.m_localPlayer;
         if (player == null)
@@ -78,7 +78,7 @@ internal sealed class EntityScanner
 
         try
         {
-            return NearbyList.Build(_found, Viewer, Tuning.ScanRadius, Tuning.MaxRows, include);
+            return NearbyList.Build(_found, Viewer, Tuning.ScanRadius, Tuning.MaxRows, include, namedFirst);
         }
         catch (Exception error)
         {

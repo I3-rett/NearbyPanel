@@ -21,6 +21,10 @@ namespace NearbyPanel.Core;
 /// must be shown as "unknown", never as "no": telling someone nothing is hunting them
 /// when something might be is the worst failure this panel has.
 /// </param>
+/// <param name="HasGivenName">
+/// True when a player has named it, so <paramref name="Name"/> is that name rather
+/// than the species. Named animals are the ones people come looking for.
+/// </param>
 public sealed record NearbyEntity(
     string Name,
     EntityKind Kind,
@@ -31,4 +35,5 @@ public sealed record NearbyEntity(
     Awareness Awareness = Awareness.Calm,
     bool Hostile = false,
     bool? TargetsYou = null,
-    float? GrowthProgress = null);
+    float? GrowthProgress = null,
+    bool HasGivenName = false);

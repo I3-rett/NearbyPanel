@@ -27,7 +27,11 @@ public sealed class Plugin : BaseUnityPlugin
     internal static DirectionFormat DirectionFormat =>
         _directionFormat == null ? Core.DirectionFormat.Degrees : _directionFormat.Value;
 
+    /// <summary>Whether named animals head the list, so the dump orders as the panel does.</summary>
+    internal static bool NamedFirst => _namedFirst == null || _namedFirst.Value;
+
     private static ConfigEntry<KeyboardShortcut> _toggleKey = null!;
+    private static ConfigEntry<bool> _namedFirst = null!;
     private static ConfigEntry<bool> _openOnStart = null!;
     private static ConfigEntry<PanelAnchor> _anchor = null!;
     private static ConfigEntry<DirectionFormat> _directionFormat = null!;
@@ -89,6 +93,17 @@ public sealed class Plugin : BaseUnityPlugin
                 "Whether the panel is already showing when you load into a world.",
                 null,
                 new ConfigurationManagerAttributes { Order = 70 }));
+
+        _namedFirst = Config.Bind(
+            "General",
+            "Named first",
+            true,
+            new ConfigDescription(
+                "List animals you have named before the rest, each group nearest first. "
+                + "A named animal is then never pushed off the bottom of the list by a "
+                + "crowd of unnamed ones.",
+                null,
+                new ConfigurationManagerAttributes { Order = 60 }));
 
         _directionFormat = Config.Bind(
             "Panel",
@@ -220,7 +235,7 @@ public sealed class Plugin : BaseUnityPlugin
     {
         try
         {
-            IReadOnlyList<NearbyEntity> entities = _scanner.Scan(FilterState.Predicate());
+            IReadOnlyList<NearbyEntity> entities = _scanner.Scan(FilterState.Predicate(), NamedFirst);
 
             _rows.Clear();
             foreach (NearbyEntity entity in entities)
