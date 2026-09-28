@@ -32,7 +32,7 @@ internal static class DumpCommand
 
     private static void Run(Terminal.ConsoleEventArgs args, EntityScanner scanner)
     {
-        IReadOnlyList<NearbyEntity> rows = scanner.Scan(FilterState.Predicate());
+        IReadOnlyList<NearbyEntity> rows = scanner.Scan(FilterState.Predicate(), Plugin.NamedFirst);
         string scope = $"{Tuning.ScanRadius:0} m{FilterState.Describe()}";
 
         if (rows.Count == 0)

@@ -144,4 +144,60 @@ public class NearbyListTests
         Assert.Single(rows);
         Assert.Equal("fine", rows[0].Name);
     }
+
+    // ----- named first ----------------------------------------------------
+
+    private static NearbyEntity Named(string name, float x) =>
+        At(name, x) with { HasGivenName = true };
+
+    [Fact]
+    public void Named_first_puts_a_named_animal_above_a_nearer_unnamed_one()
+    {
+        // The boar pen: MAMA and PAPA sit behind a dozen piglets.
+        List<NearbyEntity> found = new() { At("Boar", 2f), Named("MAMA", 12f), At("Boar", 4f) };
+
+        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 10, namedFirst: true);
+
+        Assert.Equal(new[] { "MAMA", "Boar", "Boar" }, rows.Select(r => r.Name));
+    }
+
+    [Fact]
+    public void Named_animals_are_still_nearest_first_among_themselves()
+    {
+        List<NearbyEntity> found = new() { Named("PAPA", 20f), At("Boar", 1f), Named("MAMA", 10f) };
+
+        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 10, namedFirst: true);
+
+        Assert.Equal(new[] { "MAMA", "PAPA", "Boar" }, rows.Select(r => r.Name));
+    }
+
+    [Fact]
+    public void Named_first_sorts_before_the_cap_so_a_named_animal_is_never_cut()
+    {
+        List<NearbyEntity> found = new() { At("Boar", 1f), At("Boar", 2f), At("Boar", 3f), Named("PAPA", 40f) };
+
+        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 2, namedFirst: true);
+
+        Assert.Equal(new[] { "PAPA", "Boar" }, rows.Select(r => r.Name));
+    }
+
+    [Fact]
+    public void Without_named_first_a_named_animal_takes_its_place_by_distance()
+    {
+        List<NearbyEntity> found = new() { Named("MAMA", 12f), At("Boar", 2f) };
+
+        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 10, namedFirst: false);
+
+        Assert.Equal(new[] { "Boar", "MAMA" }, rows.Select(r => r.Name));
+    }
+
+    [Fact]
+    public void Named_first_still_honours_the_radius()
+    {
+        List<NearbyEntity> found = new() { Named("MAMA", 60f), At("Boar", 2f) };
+
+        var rows = NearbyList.Build(found, Viewer, radius: 50f, limit: 10, namedFirst: true);
+
+        Assert.Equal(new[] { "Boar" }, rows.Select(r => r.Name));
+    }
 }
