@@ -98,7 +98,7 @@ internal sealed class EntityScanner
 
         try
         {
-            return NearbyList.Build(_found, Viewer, Tuning.ScanRadius, Tuning.MaxRows, include, namedFirst);
+            return NearbyList.Build(_found, Viewer, Tuning.ScanRadius, int.MaxValue, include, namedFirst);
         }
         catch (Exception error)
         {

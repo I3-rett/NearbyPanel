@@ -17,8 +17,13 @@ internal static class Tuning
     /// </summary>
     public const float ScanRadius = 50f;
 
-    /// <summary>Most rows ever listed, closest first.</summary>
-    public const int MaxRows = 25;
+    /// <summary>
+    /// Most rows the panel can be set to draw. Only drawing is capped: the list keeps
+    /// every creature in range, so the title's count and the "+N more" note are true
+    /// even in a busy pen. Capping the list itself once made a full pen read
+    /// "25 within 50 m" and hid the rest from the count.
+    /// </summary>
+    public const int MaxVisibleRows = 50;
 
     /// <summary>
     /// The radius as it appears in text. A constant rather than a per-frame
