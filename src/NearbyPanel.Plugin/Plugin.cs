@@ -43,6 +43,13 @@ public sealed class Plugin : BaseUnityPlugin
     private static ConfigEntry<DirectionFormat> _directionFormat = null!;
     private static ConfigEntry<int> _maxVisibleRows = null!;
     private static ConfigEntry<int> _fontSize = null!;
+
+    /// <summary>One width per column before STATUS, which takes the rest.</summary>
+    private static readonly ConfigEntry<float>[] ColumnWidthSettings =
+        new ConfigEntry<float>[RowFormatter.ColumnNames.Length - 1];
+
+    // Refilled from the settings every draw; reused so that allocates nothing.
+    private readonly float[] _columnWidths = new float[RowFormatter.ColumnNames.Length - 1];
     private static ConfigEntry<float> _panelWidth = null!;
     private static ConfigEntry<float> _marginX = null!;
     private static ConfigEntry<float> _marginY = null!;
@@ -190,6 +197,8 @@ public sealed class Plugin : BaseUnityPlugin
                 new AcceptableValueRange<int>(8, 32),
                 new ConfigurationManagerAttributes { Order = 50 }));
 
+        BindColumnWidths();
+
         _open = _openOnStart.Value;
 
         // Constructing a command registers it with the terminal, which keeps its
@@ -303,6 +312,37 @@ public sealed class Plugin : BaseUnityPlugin
             Screen.width,
             Screen.height);
 
-        _view.Draw(_rows, placement, _maxVisibleRows.Value, _fontSize.Value, _title);
+        for (int i = 0; i < _columnWidths.Length; i++)
+        {
+            _columnWidths[i] = ColumnWidthSettings[i].Value;
+        }
+
+        _view.Draw(_rows, placement, _maxVisibleRows.Value, _fontSize.Value, _title, _columnWidths);
+    }
+
+    /// <summary>
+    /// A width in pixels for every column but STATUS, which takes what is left of the
+    /// panel. Defaults suit the default font size 20 at width 700; they do not scale
+    /// with the font, so a larger font needs wider columns. 0 hides a column.
+    /// </summary>
+    private void BindColumnWidths()
+    {
+        float[] defaults = { 140f, 60f, 64f, 48f, 28f, 72f };
+
+        // ASCII keys: the cfg file is edited by hand too, and "★ width" is hard to type.
+        string[] names = { "NAME", "DIST", "DIR", "ALT", "Stars", "ALERT" };
+
+        for (int i = 0; i < ColumnWidthSettings.Length; i++)
+        {
+            ColumnWidthSettings[i] = Config.Bind(
+                "Columns",
+                names[i] + " width",
+                defaults[i],
+                new ConfigDescription(
+                    $"Width of the {RowFormatter.ColumnNames[i]} column in pixels. STATUS takes whatever is left "
+                    + "of the panel width. 0 hides the column.",
+                    new AcceptableValueRange<float>(0f, 600f),
+                    new ConfigurationManagerAttributes { Order = 100 - i }));
+        }
     }
 }
