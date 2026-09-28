@@ -21,6 +21,15 @@ namespace NearbyPanel.Core;
 /// must be shown as "unknown", never as "no": telling someone nothing is hunting them
 /// when something might be is the worst failure this panel has.
 /// </param>
+/// <param name="TamingSecondsLeft">
+/// Seconds of feeding still needed to finish taming, alongside
+/// <paramref name="TamingProgress"/>; null when unknown. Only counts down while the
+/// animal is fed and calm, so it is not a time of day to wait for.
+/// </param>
+/// <param name="GrowthSecondsLeft">
+/// Seconds until a young animal becomes an adult, alongside
+/// <paramref name="GrowthProgress"/>; null when unknown.
+/// </param>
 /// <param name="HasGivenName">
 /// True when a player has named it, so <paramref name="Name"/> is that name rather
 /// than the species. Named animals are the ones people come looking for.
@@ -36,4 +45,6 @@ public sealed record NearbyEntity(
     bool Hostile = false,
     bool? TargetsYou = null,
     float? GrowthProgress = null,
-    bool HasGivenName = false);
+    bool HasGivenName = false,
+    float? TamingSecondsLeft = null,
+    float? GrowthSecondsLeft = null);

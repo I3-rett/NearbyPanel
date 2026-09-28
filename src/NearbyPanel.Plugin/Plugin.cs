@@ -27,6 +27,12 @@ public sealed class Plugin : BaseUnityPlugin
     internal static DirectionFormat DirectionFormat =>
         _directionFormat == null ? Core.DirectionFormat.Degrees : _directionFormat.Value;
 
+    /// <summary>The STATUS progress format the panel is using, so the dump matches it.</summary>
+    internal static ProgressFormat ProgressFormat =>
+        _progressFormat == null ? Core.ProgressFormat.Percent : _progressFormat.Value;
+
+    private static ConfigEntry<ProgressFormat> _progressFormat = null!;
+
     /// <summary>Whether named animals head the list, so the dump orders as the panel does.</summary>
     internal static bool NamedFirst => _namedFirst == null || _namedFirst.Value;
 
@@ -117,6 +123,17 @@ public sealed class Plugin : BaseUnityPlugin
                 + "eight arrows.",
                 null,
                 new ConfigurationManagerAttributes { Order = 95 }));
+
+        _progressFormat = Config.Bind(
+            "Panel",
+            "Progress format",
+            ProgressFormat.Percent,
+            new ConfigDescription(
+                "How taming and growth read in STATUS. Percent: how far along, 42%. "
+                + "Time: how long is left, 4 min. Taming time only counts down while the "
+                + "animal is fed, so it reads '4 min fed'. Both: 42% · 4 min fed.",
+                null,
+                new ConfigurationManagerAttributes { Order = 94 }));
 
         _anchor = Config.Bind(
             "Panel",
@@ -242,7 +259,7 @@ public sealed class Plugin : BaseUnityPlugin
             foreach (NearbyEntity entity in entities)
             {
                 _rows.Add(RowFormatter.Cells(
-                    entity, _scanner.Viewer, _scanner.Forward, _directionFormat.Value));
+                    entity, _scanner.Viewer, _scanner.Forward, _directionFormat.Value, _progressFormat.Value));
             }
 
             // Built once per refresh rather than per OnGUI call, of which there are
