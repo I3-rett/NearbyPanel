@@ -46,14 +46,14 @@ internal static class EntityMapper
         Procreation procreation = character.GetComponent<Procreation>();
 
         return new NearbyEntity(
-            Name: given ?? Localize(character.m_name),
+            Name: RichText.Strip(given ?? Localize(character.m_name)),
             Kind: kind,
             // transform.position, not GetCenterPoint(): the viewer is measured at the
             // player's feet, and comparing feet against a collider centre made the
             // altitude column read about +1 for a creature standing level with you.
             Position: ToVec3(character.transform.position),
             Level: character.GetLevel(),
-            Status: tameable != null ? Localize(tameable.GetStatusString()) : null,
+            Status: tameable != null ? RichText.Strip(Localize(tameable.GetStatusString())) : null,
             TamingProgress: taming,
             Awareness: AwarenessOf(ai),
             Hostile: IsHostileToPlayer(ai),
