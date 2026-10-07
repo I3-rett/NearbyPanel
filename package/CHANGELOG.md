@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+- **Names with colour tags.** The Hildir quest bosses (Brenna, Geirrhafa, Zil, Thungr) and
+  Lord Reto are localized by the game as `<color=orange>…</color>`. The panel, which draws
+  without rich text, showed the tag cut by the column width. Tags are now removed from
+  names and status text before display.
+
 ## 1.1.0
 
 Built around watching a breeding pen.

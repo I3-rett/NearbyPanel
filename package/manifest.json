@@ -1,7 +1,7 @@
 {
   "name": "NearbyPanel",
   "author": "I3_rett",
-  "version_number": "1.1.0",
+  "version_number": "1.1.1",
   "website_url": "https://github.com/I3-rett/NearbyPanel",
   "description": "Lists the creatures near you with distance, direction, taming and growth progress, and why an animal is or is not breeding. Client-side only.",
   "dependencies": [
