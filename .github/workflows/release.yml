@@ -16,6 +16,10 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    # A step cannot read its own env in its `if`, so the presence of the secret is
+    # exposed here as a boolean. The token itself is only handed to the publish step.
+    env:
+      HAS_THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -119,10 +123,11 @@ jobs:
           fi
 
       # Skipped unless the token is configured, so a tag never fails for want of
-      # a secret. A published version cannot be replaced or deleted, so this step
+      # a secret, and on a manual run only when "Also upload to Thunderstore" was
+      # ticked. A published version cannot be replaced or deleted, so this step
       # deliberately runs last, after everything else has succeeded.
       - name: Publish to Thunderstore
-        if: env.THUNDERSTORE_TOKEN != ''
+        if: env.HAS_THUNDERSTORE_TOKEN == 'true' && (github.ref_type == 'tag' || inputs.publish == true)
         env:
           THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
         shell: bash
