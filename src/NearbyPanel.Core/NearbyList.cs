@@ -66,8 +66,8 @@ public static class NearbyList
     /// Whether <paramref name="entity"/> matches a free-text filter, compared
     /// case-insensitively against its name. The word <c>fish</c> also matches every
     /// fish, so <c>nearby_filter fish</c> isolates them without knowing their names.
-    /// An empty or whitespace filter matches
-    /// everything, so clearing it restores the full list rather than emptying it.
+    /// An empty or whitespace filter matches everything, so clearing it restores the
+    /// full list rather than emptying it.
     /// </summary>
     public static bool MatchesText(NearbyEntity entity, string? text)
     {

@@ -91,7 +91,7 @@ internal static class EntityMapper
             Position: ToVec3(fish.transform.position),
             // The game's fish size, 1-3, stored as item quality. The star column subtracts
             // one as it does for creature levels, so "[2]" in the hover is one star here.
-            Level: drop != null ? Math.Max(1, drop.m_itemData.m_quality) : 1,
+            Level: Math.Max(1, drop?.m_itemData?.m_quality ?? 1),
             Status: Baits.Describe(BaitsOf(fish)),
             TamingProgress: null,
             Awareness: Awareness.Calm,
@@ -117,7 +117,7 @@ internal static class EntityMapper
             }
 
             yield return new Bait(
-                RichText.Strip(Localize(setting.m_bait.m_itemData.m_shared.m_name)),
+                RichText.Strip(LocalizeOrEmpty(setting.m_bait.m_itemData?.m_shared?.m_name)),
                 setting.m_chance);
         }
     }
@@ -396,6 +396,10 @@ internal static class EntityMapper
         ZNetView view = component.GetComponent<ZNetView>();
         return view != null && view.IsValid() ? view.GetZDO() : null;
     }
+
+    // A modded prefab may lack a name; an empty one is left out of the bait text.
+    private static string LocalizeOrEmpty(string? token) =>
+        token == null ? string.Empty : Localize(token);
 
     private static string Localize(string token) =>
         Localization.instance != null ? Localization.instance.Localize(token) : token;

@@ -32,13 +32,13 @@ world objects: berries are `Pickable`, ore deposits are `MineRock5`, and neither
 `Character`.
 
 **Fish** — an `ItemDrop` prefab carrying a `Fish` component, not a `Character`, so
-`GetCharactersInRange` never returns one. `Fish.Instances` is the game's own static list of
-instantiated fish, filled in `OnEnable` and emptied in `OnDisable`. `Fish.m_baits` is a
-per-species list of `(ItemDrop bait, float chance)`; the game accepts a bait when the bait
-prefab name matches and a random roll beats the chance. Size is
-`ItemDrop.m_itemData.m_quality`, 1–3. The game renders a fish only while some peer owns its
-ZDO (`SetVisible(HasOwner())`), so this mod reads the position regardless and never claims
-ownership.
+`GetCharactersInRange` never returns one. `Fish.Instances` is the game's own static list
+of instantiated fish, filled in `OnEnable` and emptied in `OnDisable`. `Fish.m_baits` is
+a per-species list of `(ItemDrop bait, float chance)`; the game accepts a bait when the
+bait prefab name matches and a random roll beats the chance. Size is
+`ItemDrop.m_itemData.m_quality`, 1–3. The game renders a fish only while some peer owns
+its ZDO (`SetVisible(HasOwner())`), so this mod reads the position regardless and never
+claims ownership.
 
 **Tameable** — the taming and pet component. Progress is `1 - s_tameTimeLeft /
 m_tamingTime`. The timer only advances while the creature has eaten (`!IsHungry()`) and

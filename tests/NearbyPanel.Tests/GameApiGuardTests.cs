@@ -490,8 +490,8 @@ public class GameApiGuardTests
         }
 
         TypeDefinition setting = GameAssembly.NestedType("Fish", "BaitSetting");
-        FieldDefinition bait = setting.Fields.First(f => f.Name == "m_bait");
-        FieldDefinition chance = setting.Fields.First(f => f.Name == "m_chance");
+        FieldDefinition bait = setting.Fields.Single(f => f.Name == "m_bait");
+        FieldDefinition chance = setting.Fields.Single(f => f.Name == "m_chance");
 
         Assert.True(setting.IsNestedPublic);
         Assert.True(bait.IsPublic);
@@ -521,8 +521,8 @@ public class GameApiGuardTests
         }
 
         TypeDefinition data = GameAssembly.NestedType("ItemDrop", "ItemData");
-        FieldDefinition quality = data.Fields.First(f => f.Name == "m_quality");
-        FieldDefinition shared = data.Fields.First(f => f.Name == "m_shared");
+        FieldDefinition quality = data.Fields.Single(f => f.Name == "m_quality");
+        FieldDefinition shared = data.Fields.Single(f => f.Name == "m_shared");
 
         Assert.True(data.IsNestedPublic);
         Assert.True(quality.IsPublic);
@@ -538,9 +538,9 @@ public class GameApiGuardTests
             return;
         }
 
-        // Nested one level deeper than the brief assumed: ItemDrop.ItemData.SharedData.
+        // SharedData is nested inside ItemDrop.ItemData, not directly in ItemDrop.
         TypeDefinition shared = GameAssembly.NestedType("ItemDrop", "ItemData")
-            .NestedTypes.First(t => t.Name == "SharedData");
+            .NestedTypes.Single(t => t.Name == "SharedData");
         FieldDefinition name = shared.Fields.First(f => f.Name == "m_name");
 
         Assert.True(shared.IsNestedPublic);
