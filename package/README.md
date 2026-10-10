@@ -1,8 +1,8 @@
 # NearbyPanel
 
-Lists the creatures around you — how far, which way, how high, how many stars, what they
-have noticed, how far along any animal you are taming or raising is, and why a tamed animal
-is or is not breeding. Press **N**.
+Lists the creatures and fish around you — how far, which way, how high, how many stars,
+what they have noticed, how far along any animal you are taming or raising is, and why a
+tamed animal is or is not breeding. Press **N**.
 
 **Client-side only. The server does not need it, and it will not stop you joining a server
 that does not have it.** Players without the mod are unaffected and see nothing different.
@@ -30,7 +30,8 @@ that does not have it.** Players without the mod are unaffected and see nothing 
 - Breeding: `Love 2/4`, `Pregnant`, or what is stopping it — `Crowded 5/4 · Lox Calf 18.4 m`,
   `Partner pregnant`, `Partner hungry`, `No partner` — with each species' own ranges
 - Column widths are settings, so the panel fits your font and screen
-- Filter the list by name with `nearby_filter boar`, or clear it with `nearby_filter`
+- Filter the list by name with `nearby_filter boar`, show only fish with `nearby_filter fish`,
+  or clear it with `nearby_filter`
 - `nearby_dump` writes the current list to the log, which is useful in a bug report
 - Other players are never listed
 
@@ -41,6 +42,8 @@ game.
 
 It lists every creature within 50 m, which means it shows you things through trees and
 fog that you could not see yourself. Decide whether that suits the people you play with.
+Fish count too: they show their size in the ★ column and, under STATUS, the baits the
+species bites on.
 
 Two limits are fixed in the source rather than left as settings: the **50 m radius**,
 because reach is what separates this from surveillance and a limit you can slide is not a
@@ -61,7 +64,8 @@ add `-console` to the launch parameters (r2modman: **Settings → Launch paramet
 press **F5** in game.
 
 - `nearby_filter <text>` shows only creatures whose name contains the text, e.g.
-  `nearby_filter lox`. With no argument it clears the filter. Also a setting.
+  `nearby_filter lox`; `nearby_filter fish` shows only fish. With no argument it clears
+  the filter. Also a setting.
 - `nearby_dump` writes the list as the panel shows it, same filter, to the console and to
   `BepInEx/LogOutput.log`. Under each animal that breeds it adds what the breeding checks
   counted: its ranges, and every animal considered with its 3-D and ground distance, height

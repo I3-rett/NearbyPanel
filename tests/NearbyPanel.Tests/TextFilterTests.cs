@@ -99,4 +99,19 @@ public class TextFilterTests
 
         Assert.Empty(NearbyList.Build(found, Viewer, 50f, 10, NearbyList.Filter("bre")));
     }
+
+    [Theory]
+    [InlineData("fish")]
+    [InlineData("FISH")]
+    [InlineData("perch")]
+    public void The_fish_keyword_isolates_fish_without_knowing_their_names(string filter)
+    {
+        Assert.True(NearbyList.MatchesText(Named("Perch", EntityKind.Fish), filter));
+    }
+
+    [Fact]
+    public void The_fish_keyword_does_not_match_a_creature()
+    {
+        Assert.False(NearbyList.MatchesText(Named("Boar"), "fish"));
+    }
 }

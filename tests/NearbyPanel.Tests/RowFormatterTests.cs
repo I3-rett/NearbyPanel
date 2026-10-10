@@ -156,4 +156,28 @@ public class RowFormatterTests
         // The DIST column must still start where the header says it does.
         Assert.Equal("10.0", row.Substring(offsets[1], 6).Trim());
     }
+
+    [Fact]
+    public void A_fish_row_shows_its_bait_and_no_alert_or_progress()
+    {
+        NearbyEntity fish = new(
+            "Perch", EntityKind.Fish, new Vec3(1f, 0f, 0f), 2, "Mistlands bait", null,
+            Awareness.Calm, Hostile: false);
+
+        RowCells cells = RowFormatter.Cells(fish, Viewer, North);
+
+        Assert.Equal("1", cells.Level);
+        Assert.Equal("-", cells.Awareness);
+        Assert.Equal("Mistlands bait", cells.Status);
+        Assert.False(cells.Threat);
+        Assert.False(cells.Progress);
+    }
+
+    [Fact]
+    public void An_ordinary_fish_has_no_stars()
+    {
+        NearbyEntity fish = new("Perch", EntityKind.Fish, new Vec3(1f, 0f, 0f), 1, null, null);
+
+        Assert.Equal("", RowFormatter.Cells(fish, Viewer, North).Level);
+    }
 }

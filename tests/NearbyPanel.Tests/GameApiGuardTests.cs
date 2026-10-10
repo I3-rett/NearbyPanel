@@ -435,4 +435,116 @@ public class GameApiGuardTests
         Assert.True(attributes.IsNestedPublic);
         Assert.Equal(8, (int)boost.Constant);
     }
+
+    // ----- fish: EntityMapper / EntityScanner -----------------------------
+
+    [Fact]
+    public void Fish_m_name_is_a_public_string_field()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition field = GameAssembly.Field("Fish", "m_name");
+
+        Assert.True(field.IsPublic);
+        Assert.Equal("String", field.FieldType.Name);
+    }
+
+    [Fact]
+    public void Fish_m_baits_is_a_public_field()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition field = GameAssembly.Field("Fish", "m_baits");
+
+        Assert.True(field.IsPublic);
+        Assert.Equal("List`1", field.FieldType.Name);
+    }
+
+    [Fact]
+    public void Fish_Instances_getter_is_public_static()
+    {
+        // The game keeps this list itself in OnEnable/OnDisable; the scanner only reads it.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Fish", "get_Instances");
+
+        Assert.True(method.IsPublic);
+        Assert.True(method.IsStatic);
+    }
+
+    [Fact]
+    public void Fish_BaitSetting_is_a_public_nested_type_with_bait_and_chance()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition setting = GameAssembly.NestedType("Fish", "BaitSetting");
+        FieldDefinition bait = setting.Fields.Single(f => f.Name == "m_bait");
+        FieldDefinition chance = setting.Fields.Single(f => f.Name == "m_chance");
+
+        Assert.True(setting.IsNestedPublic);
+        Assert.True(bait.IsPublic);
+        Assert.Equal("ItemDrop", bait.FieldType.Name);
+        Assert.True(chance.IsPublic);
+        Assert.Equal("Single", chance.FieldType.Name);
+    }
+
+    [Fact]
+    public void ItemDrop_m_itemData_is_a_public_field()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        Assert.True(GameAssembly.Field("ItemDrop", "m_itemData").IsPublic);
+    }
+
+    [Fact]
+    public void ItemDrop_ItemData_exposes_quality_and_shared()
+    {
+        // A fish's size (1-3) is stored as the item's quality.
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition data = GameAssembly.NestedType("ItemDrop", "ItemData");
+        FieldDefinition quality = data.Fields.Single(f => f.Name == "m_quality");
+        FieldDefinition shared = data.Fields.Single(f => f.Name == "m_shared");
+
+        Assert.True(data.IsNestedPublic);
+        Assert.True(quality.IsPublic);
+        Assert.Equal("Int32", quality.FieldType.Name);
+        Assert.True(shared.IsPublic);
+    }
+
+    [Fact]
+    public void ItemDrop_SharedData_m_name_is_a_public_string_field()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // SharedData is nested inside ItemDrop.ItemData, not directly in ItemDrop.
+        TypeDefinition shared = GameAssembly.NestedType("ItemDrop", "ItemData")
+            .NestedTypes.Single(t => t.Name == "SharedData");
+        FieldDefinition name = shared.Fields.First(f => f.Name == "m_name");
+
+        Assert.True(shared.IsNestedPublic);
+        Assert.True(name.IsPublic);
+        Assert.Equal("String", name.FieldType.Name);
+    }
 }

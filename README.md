@@ -6,9 +6,9 @@
 [![Valheim](https://img.shields.io/badge/Valheim-1.0.16-orange)](https://www.valheim.com/)
 [![BepInEx](https://img.shields.io/badge/BepInEx-5.4.2351-lightgrey)](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
 
-A client-side Valheim mod. Press **N** for a list of the creatures around you: distance,
-direction, altitude, star rating, what each one has noticed, live taming and growth
-progress, and why a tamed animal is or is not breeding.
+A client-side Valheim mod. Press **N** for a list of the creatures and fish around you:
+distance, direction, altitude, star rating, what each one has noticed, live taming and
+growth progress, and why a tamed animal is or is not breeding.
 
 Client-side only. The server does not need it, it will not stop you joining a server that
 does not have it, and players without it see nothing different.
@@ -26,9 +26,10 @@ and adds what else is nearby and whether any of it has noticed you.
 
 ## Scope
 
-The list covers every creature within 50 m, so it sees through trees and fog. Two limits
-are constants in the source rather than settings: the radius, because a limit you can slide
-is not a limit, and the exclusion of other players.
+The list covers every creature within 50 m, so it sees through trees and fog. Fish count
+too: they show their size in the ★ column and, under STATUS, the baits the species bites
+on. Two limits are constants in the source rather than settings: the radius, because a
+limit you can slide is not a limit, and the exclusion of other players.
 
 ## Installing
 
@@ -57,7 +58,8 @@ add `-console` to the launch parameters (r2modman: **Settings → Launch paramet
 press **F5** in game.
 
 - `nearby_filter <text>` shows only creatures whose name contains the text, e.g.
-  `nearby_filter lox`. With no argument it clears the filter. Also a setting.
+  `nearby_filter lox`; `nearby_filter fish` shows only fish. With no argument it clears
+  the filter. Also a setting.
 - `nearby_dump` writes the list as the panel shows it, same filter, to the console and to
   `BepInEx/LogOutput.log`. Under each animal that breeds it adds what the breeding checks
   counted: its ranges, and every animal considered with its 3-D and ground distance, height
