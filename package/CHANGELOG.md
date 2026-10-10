@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+- **Fish.** Fish now appear in the list with the creatures, nearest first. Their size shows in
+  the ★ column the way creature levels do (the game's `[2]` hover is one star), and STATUS
+  lists the baits the species bites on, with a percentage only when the chance is under
+  100 %. `nearby_filter fish` shows only fish. Read-only like the rest: no fish is ever made
+  visible or claimed, only its position and prefab data are read.
+
 ## 1.1.1
 
 - **Names with colour tags.** The Hildir quest bosses (Brenna, Geirrhafa, Zil, Thungr) and

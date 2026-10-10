@@ -8,5 +8,5 @@ internal static class PluginInfo
 {
     public const string Guid = "I3_rett.NearbyPanel";
     public const string Name = "NearbyPanel";
-    public const string Version = "1.1.1";
+    public const string Version = "1.2.0";
 }
