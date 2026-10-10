@@ -70,6 +70,59 @@ internal static class EntityMapper
     }
 
     /// <summary>
+    /// Describes <paramref name="fish"/> as a row. A fish is not a <see cref="Character"/>:
+    /// it is a bare component on an <c>ItemDrop</c> prefab with no AI, no health and no
+    /// network record of its own worth reading, so it has its own mapper.
+    /// Returns null for a destroyed fish.
+    /// </summary>
+    public static NearbyEntity? FromFish(Fish fish)
+    {
+        if (fish == null)
+        {
+            return null;
+        }
+
+        // Fish.m_itemDrop is private, so ask the object for the component instead.
+        ItemDrop? drop = fish.GetComponent<ItemDrop>();
+
+        return new NearbyEntity(
+            Name: RichText.Strip(Localize(fish.m_name)),
+            Kind: EntityKind.Fish,
+            Position: ToVec3(fish.transform.position),
+            // The game's fish size, 1-3, stored as item quality. The star column subtracts
+            // one as it does for creature levels, so "[2]" in the hover is one star here.
+            Level: drop != null ? Math.Max(1, drop.m_itemData.m_quality) : 1,
+            Status: Baits.Describe(BaitsOf(fish)),
+            TamingProgress: null,
+            Awareness: Awareness.Calm,
+            // Known, not unknown: a fish has no AI and never hunts anyone.
+            Hostile: false,
+            TargetsYou: false,
+            Prefab: fish.gameObject.name);
+    }
+
+    /// <summary>The baits a fish takes, named as the player sees them in the inventory.</summary>
+    private static IEnumerable<Bait> BaitsOf(Fish fish)
+    {
+        if (fish.m_baits == null)
+        {
+            yield break;
+        }
+
+        foreach (Fish.BaitSetting setting in fish.m_baits)
+        {
+            if (setting == null || setting.m_bait == null)
+            {
+                continue;
+            }
+
+            yield return new Bait(
+                RichText.Strip(Localize(setting.m_bait.m_itemData.m_shared.m_name)),
+                setting.m_chance);
+        }
+    }
+
+    /// <summary>
     /// What <c>Procreation.Procreate</c> works from, for a tamed adult that breeds;
     /// null for anything else, since the game only runs it once an animal is tamed.
     /// Love points and the pregnancy stamp are read from the record, so this holds for

@@ -89,6 +89,15 @@ internal sealed class EntityScanner
 
         try
         {
+            MapFish(transform.position);
+        }
+        catch (Exception error)
+        {
+            Fault("fish query failed", error);
+        }
+
+        try
+        {
             BreedingRules.Resolve(_found);
         }
         catch (Exception error)
@@ -133,6 +142,45 @@ internal sealed class EntityScanner
             catch (Exception error)
             {
                 Fault("could not read a creature", error);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Maps the fish within scan radius. A fish is not a <see cref="Character"/>, so the
+    /// range query above never sees it; the game keeps <c>Fish.Instances</c> itself, in
+    /// <c>OnEnable</c>/<c>OnDisable</c>, and this only reads it. There is no widened ring
+    /// as for breeding, because a fish has no breeding range. The distance prefilter
+    /// keeps a lake full of far fish from being localized four times a second; Build
+    /// cuts at the radius again.
+    /// </summary>
+    private void MapFish(Vector3 viewer)
+    {
+        float radiusSqr = Tuning.ScanRadius * Tuning.ScanRadius;
+
+        foreach (var instance in Fish.Instances)
+        {
+            if (instance is not Fish fish || fish == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                if ((fish.transform.position - viewer).sqrMagnitude > radiusSqr)
+                {
+                    continue;
+                }
+
+                NearbyEntity? entity = EntityMapper.FromFish(fish);
+                if (entity != null)
+                {
+                    _found.Add(entity);
+                }
+            }
+            catch (Exception error)
+            {
+                Fault("could not read a fish", error);
             }
         }
     }
