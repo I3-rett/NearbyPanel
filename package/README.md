@@ -1,6 +1,6 @@
 # NearbyPanel
 
-Lists the creatures around you — how far, which way, how high, how many stars, what they
+Lists the creatures and fish around you — how far, which way, how high, how many stars, what they
 have noticed, how far along any animal you are taming or raising is, and why a tamed animal
 is or is not breeding. Press **N**.
 
@@ -41,6 +41,8 @@ game.
 
 It lists every creature within 50 m, which means it shows you things through trees and
 fog that you could not see yourself. Decide whether that suits the people you play with.
+Fish count too: they show their size in the ★ column and, under STATUS, the baits the
+species bites on.
 
 Two limits are fixed in the source rather than left as settings: the **50 m radius**,
 because reach is what separates this from surveillance and a limit you can slide is not a

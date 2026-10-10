@@ -6,7 +6,7 @@
 [![Valheim](https://img.shields.io/badge/Valheim-1.0.16-orange)](https://www.valheim.com/)
 [![BepInEx](https://img.shields.io/badge/BepInEx-5.4.2351-lightgrey)](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
 
-A client-side Valheim mod. Press **N** for a list of the creatures around you: distance,
+A client-side Valheim mod. Press **N** for a list of the creatures and fish around you: distance,
 direction, altitude, star rating, what each one has noticed, live taming and growth
 progress, and why a tamed animal is or is not breeding.
 
@@ -26,7 +26,9 @@ and adds what else is nearby and whether any of it has noticed you.
 
 ## Scope
 
-The list covers every creature within 50 m, so it sees through trees and fog. Two limits
+The list covers every creature within 50 m, so it sees through trees and fog. Fish count
+too: they show their size in the ★ column and, under STATUS, the baits the species bites
+on. Two limits
 are constants in the source rather than settings: the radius, because a limit you can slide
 is not a limit, and the exclusion of other players.
 
