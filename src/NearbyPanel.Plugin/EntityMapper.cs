@@ -66,7 +66,8 @@ internal static class EntityMapper
             Prefab: character.gameObject.name,
             // The game counts a partner without a Procreation component as ready.
             ReadyToMate: procreation == null || procreation.ReadyForProcreation(),
-            Breeding: BreedingOf(procreation, tameable));
+            Breeding: BreedingOf(procreation, tameable),
+            Saddled: SaddledOf(tameable));
     }
 
     /// <summary>
@@ -99,6 +100,62 @@ internal static class EntityMapper
             Hostile: false,
             TargetsYou: false,
             Prefab: fish.gameObject.name);
+    }
+
+    /// <summary>
+    /// A container row for <c>nearby_find</c>, or null when nothing inside matches
+    /// <paramref name="query"/>. Only the matching stacks go into STATUS: the point is
+    /// to find one item, not to inventory the base.
+    ///
+    /// The contents come from <c>GetInventory()</c>, which every client keeps within a
+    /// second of the ZDO (<c>Container.CheckForChanges</c> is not owner-gated), so this
+    /// never opens the chest and never asks the owner for anything.
+    /// </summary>
+    public static NearbyEntity? FromContainer(Container container, string query)
+    {
+        if (container == null)
+        {
+            return null;
+        }
+
+        Inventory? inventory = container.GetInventory();
+        if (inventory == null)
+        {
+            return null;
+        }
+
+        var matches = new List<FoundItem>();
+        foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+        {
+            if (item?.m_shared == null)
+            {
+                continue; // a broken modded item; the rest of the chest still counts
+            }
+
+            var found = new FoundItem(
+                RichText.Strip(LocalizeOrEmpty(item.m_shared.m_name)),
+                item.m_dropPrefab != null ? item.m_dropPrefab.name : null,
+                item.m_stack);
+
+            if (ItemSearch.Matches(found, query))
+            {
+                matches.Add(found);
+            }
+        }
+
+        if (matches.Count == 0)
+        {
+            return null;
+        }
+
+        return new NearbyEntity(
+            RichText.Strip(LocalizeOrEmpty(container.m_name)),
+            EntityKind.Container,
+            ToVec3(container.transform.position),
+            Level: 1,
+            Status: ItemSearch.Describe(matches),
+            TamingProgress: null,
+            Prefab: container.gameObject.name);
     }
 
     /// <summary>The baits a fish takes, named as the player sees them in the inventory.</summary>
@@ -245,6 +302,22 @@ internal static class EntityMapper
             remaining, BoostedPlayers(tameable), tameable.m_tamingBoostMultiplier);
 
         return (1f - (remaining / total), left);
+    }
+
+    /// <summary>
+    /// The game's own flag, set when a saddle is put on. Read from the ZDO because
+    /// <c>Tameable.HaveSaddle()</c> is private, and because a friend's animal reports
+    /// the same way as yours.
+    /// </summary>
+    private static bool SaddledOf(Tameable? tameable)
+    {
+        if (tameable == null)
+        {
+            return false;
+        }
+
+        ZDO? zdo = ZdoOf(tameable);
+        return zdo != null && zdo.GetBool(ZDOVars.s_haveSaddleHash, false);
     }
 
     /// <summary>

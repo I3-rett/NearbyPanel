@@ -547,4 +547,79 @@ public class GameApiGuardTests
         Assert.True(name.IsPublic);
         Assert.Equal("String", name.FieldType.Name);
     }
+
+    // ----- containers: EntityMapper.FromContainer / FindCommand ------------
+
+    [Fact]
+    public void Container_m_name_is_a_public_string_field()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // Read instead of GetHoverName(): same value, and a field cannot grow a write.
+        FieldDefinition name = GameAssembly.Field("Container", "m_name");
+        Assert.True(name.IsPublic);
+        Assert.Equal("String", name.FieldType.Name);
+    }
+
+    [Fact]
+    public void Container_GetInventory_is_public_and_returns_Inventory()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Container", "GetInventory");
+        Assert.True(method.IsPublic);
+        Assert.Equal("Inventory", method.ReturnType.Name);
+    }
+
+    [Fact]
+    public void Inventory_GetAllItems_is_public_and_returns_a_list()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Inventory", "GetAllItems");
+        Assert.True(method.IsPublic);
+        Assert.Equal("List`1", method.ReturnType.Name);
+    }
+
+    [Fact]
+    public void ItemDrop_ItemData_exposes_stack_and_drop_prefab()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition data = GameAssembly.NestedType("ItemDrop", "ItemData");
+        FieldDefinition stack = data.Fields.Single(f => f.Name == "m_stack");
+        FieldDefinition prefab = data.Fields.Single(f => f.Name == "m_dropPrefab");
+
+        Assert.True(stack.IsPublic);
+        Assert.Equal("Int32", stack.FieldType.Name);
+        Assert.True(prefab.IsPublic);
+        Assert.Equal("GameObject", prefab.FieldType.Name);
+    }
+
+    [Fact]
+    public void ZDOVars_s_haveSaddleHash_is_a_public_static_int()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // Tameable.HaveSaddle() is private; the ZDO flag it reads is the public path.
+        FieldDefinition hash = GameAssembly.Field("ZDOVars", "s_haveSaddleHash");
+        Assert.True(hash.IsPublic);
+        Assert.True(hash.IsStatic);
+        Assert.Equal("Int32", hash.FieldType.Name);
+    }
 }
