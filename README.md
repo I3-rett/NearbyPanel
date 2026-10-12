@@ -28,9 +28,13 @@ and adds what else is nearby and whether any of it has noticed you.
 
 The list covers every creature within 50 m, so it sees through trees and fog. Fish count
 too: they show their size in the ★ column and, under STATUS, the baits the species bites
-on. `nearby_find <item>` lists the chests within the same 50 m holding that item, nearest
+on. `nearby_find <text>` lists the chests within the same 50 m holding that item, nearest
 first, and pins them on the map until you log out; it reads the chest contents the game
-already sent your client and never opens anything. Two limits are constants in the source
+already sent your client and never opens anything. That reach includes chests you could
+not open yourself: another player's private chest, a chest inside a ward you have no
+access to, and a dungeon or treasure chest nobody has opened yet, since the game fills
+those in and replicates their contents the moment the zone loads. Decide whether that
+suits the people you play with. Two limits are constants in the source
 rather than settings: the radius, because a limit you can slide is not a limit, and the
 exclusion of other players.
 
