@@ -55,6 +55,9 @@
     <PackageReference Include="Digitalroot.Valheim.Common.References" Version="1.0.16" />
     <PackageReference Include="Digitalroot.References.Unity" Version="6000.0.75" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <!-- The reference packages ship no Splatform.dll, and Minimap.AddPin needs its
+         PlatformUserID at compile time. A stub supplies it; see its doc. Never copied. -->
+    <ProjectReference Include="..\..\build\Splatform.Stub\Splatform.Stub.csproj"><Private>false</Private></ProjectReference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseNuGetGameRefs)' != 'true'">
