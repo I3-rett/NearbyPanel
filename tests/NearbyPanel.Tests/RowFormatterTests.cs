@@ -180,4 +180,30 @@ public class RowFormatterTests
 
         Assert.Equal("", RowFormatter.Cells(fish, Viewer, North).Level);
     }
+
+    [Fact]
+    public void A_container_row_shows_its_items_as_status_and_no_alert_or_stars()
+    {
+        var entity = new NearbyEntity(
+            "Reinforced chest", EntityKind.Container, new Vec3(10f, 4f, 0f),
+            Level: 1, Status: "Asksvin saddle ×1", TamingProgress: null);
+
+        RowCells cells = RowFormatter.Cells(entity, new Vec3(0f, 0f, 0f), new Vec3(0f, 0f, 1f));
+
+        Assert.Equal("Reinforced chest", cells.Name);
+        Assert.Equal("", cells.Level);
+        Assert.Equal("-", cells.Awareness);
+        Assert.Equal("Asksvin saddle ×1", cells.Status);
+        Assert.Equal("+4", cells.Altitude);
+        Assert.False(cells.Threat);
+        Assert.False(cells.Progress);
+    }
+
+    [Fact]
+    public void Saddled_defaults_to_false()
+    {
+        var entity = new NearbyEntity("Lox", EntityKind.Tameable, new Vec3(0f, 0f, 0f), 1, null, null);
+        Assert.False(entity.Saddled);
+        Assert.True((entity with { Saddled = true }).Saddled);
+    }
 }

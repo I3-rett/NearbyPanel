@@ -12,4 +12,10 @@ public enum EntityKind
     /// because it hides under water and its hover only works once landed.
     /// </summary>
     Fish,
+
+    /// <summary>
+    /// A <c>Container</c> (chest, wagon, ship hold): never in the live list, only in a
+    /// <c>nearby_find</c> answer, where STATUS holds the matching items.
+    /// </summary>
+    Container,
 }
