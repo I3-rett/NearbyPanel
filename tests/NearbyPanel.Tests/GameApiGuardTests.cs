@@ -667,6 +667,16 @@ public class GameApiGuardTests
 
         Assert.True(add.IsPublic);
         Assert.Equal("PinData", add.ReturnType.Name);
+
+        // The release build compiles against build/Splatform.Stub, so the DLL binds to
+        // exactly [Splatform]Splatform.PlatformUserID. If the game moves the type, this
+        // must go red before a player sees a MissingMethodException.
+        TypeReference author = add.Parameters[6].ParameterType;
+        Assert.Equal("PlatformUserID", author.Name);
+        Assert.Equal("Splatform", author.Namespace);
+        Assert.Equal("Splatform", author.Scope.Name.Replace(".dll", string.Empty));
+        Assert.True(author.IsValueType);
+
         Assert.True(remove.IsPublic);
     }
 
