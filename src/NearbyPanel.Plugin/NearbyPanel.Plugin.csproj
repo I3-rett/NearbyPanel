@@ -67,6 +67,12 @@
       <HintPath>$(ValheimManaged)\assembly_guiutils.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
+    <!-- PlatformUserID, a parameter type of Minimap.AddPin. The compiler needs the
+         assembly even though this mod never names the type. -->
+    <Reference Include="Splatform">
+      <HintPath>$(ValheimManaged)\Splatform.dll</HintPath>
+      <Private>False</Private><SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(ValheimManaged)\UnityEngine.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>

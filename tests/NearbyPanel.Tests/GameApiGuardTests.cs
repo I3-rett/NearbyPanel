@@ -637,4 +637,61 @@ public class GameApiGuardTests
         Assert.True(hash.IsStatic);
         Assert.Equal("Int32", hash.FieldType.Name);
     }
+
+    // ----- map pins: FindCommand -------------------------------------------
+
+    [Fact]
+    public void Minimap_instance_is_a_public_static_property()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        PropertyDefinition instance = GameAssembly.Type("Minimap").Properties.Single(p => p.Name == "instance");
+        Assert.True(instance.GetMethod.IsPublic);
+        Assert.True(instance.GetMethod.IsStatic);
+    }
+
+    [Fact]
+    public void Minimap_AddPin_and_RemovePin_are_public()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition add = GameAssembly.Method(
+            "Minimap", "AddPin", "Vector3", "PinType", "String", "Boolean", "Boolean", "Int64", "PlatformUserID");
+        MethodDefinition remove = GameAssembly.Method("Minimap", "RemovePin", "PinData");
+
+        Assert.True(add.IsPublic);
+        Assert.Equal("PinData", add.ReturnType.Name);
+        Assert.True(remove.IsPublic);
+    }
+
+    [Fact]
+    public void Minimap_PinType_is_a_public_enum_with_Icon3()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition pinType = GameAssembly.NestedType("Minimap", "PinType");
+        Assert.True(pinType.IsNestedPublic);
+        Assert.True(pinType.IsEnum);
+        Assert.Contains(pinType.Fields, f => f.Name == "Icon3");
+    }
+
+    [Fact]
+    public void Minimap_PinData_is_a_public_nested_class()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        Assert.True(GameAssembly.NestedType("Minimap", "PinData").IsNestedPublic);
+    }
 }
