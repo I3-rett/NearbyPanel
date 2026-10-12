@@ -18,4 +18,10 @@ public enum EntityKind
     /// <c>nearby_find</c> answer, where STATUS holds the matching items.
     /// </summary>
     Container,
+
+    /// <summary>
+    /// An egg: an <c>ItemDrop</c> carrying the game's <c>EggGrow</c>. Listed because the
+    /// hover only says warm or cold, while the reason it is cold is the useful part.
+    /// </summary>
+    Egg,
 }

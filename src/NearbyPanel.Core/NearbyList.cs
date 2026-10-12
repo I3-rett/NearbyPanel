@@ -65,7 +65,7 @@ public static class NearbyList
     /// <summary>
     /// Whether <paramref name="entity"/> matches a free-text filter, compared
     /// case-insensitively against its name. The word <c>fish</c> also matches every
-    /// fish, so <c>nearby_filter fish</c> isolates them without knowing their names.
+    /// fish and <c>egg</c> every egg, so <c>nearby_filter fish</c> isolates them without knowing their names.
     /// An empty or whitespace filter matches everything, so clearing it restores the
     /// full list rather than emptying it.
     /// </summary>
@@ -81,6 +81,12 @@ public static class NearbyList
 
         if (entity.Kind == EntityKind.Fish
             && string.Equals(needle, "fish", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (entity.Kind == EntityKind.Egg
+            && string.Equals(needle, "egg", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

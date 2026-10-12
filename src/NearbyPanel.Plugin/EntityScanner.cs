@@ -14,6 +14,17 @@ internal sealed class EntityScanner
     private readonly List<Character> _characters = new();
     private readonly List<NearbyEntity> _found = new();
 
+    /// <summary>Eggs are items; this is the layer the game's own item searches use.</summary>
+    private static int s_itemMask;
+
+    /// <summary>
+    /// Reused across scans. The buffer doubles when a query fills it, up to 4096, so an
+    /// item-littered base cannot hide an egg; beyond 4096 the extras are dropped.
+    /// </summary>
+    private Collider[] _itemColliders = new Collider[256];
+
+    private readonly HashSet<EggGrow> _seenEggs = new();
+
     /// <summary>Where the player is, valid only after a successful scan.</summary>
     public Vec3 Viewer { get; private set; }
 
@@ -72,9 +83,10 @@ internal sealed class EntityScanner
         // against its whole pen. How much wider comes from the animals themselves:
         // each species carries its own breeding ranges. Only the ring beyond the first
         // pass is read again, and Build still cuts the rows at ScanRadius.
+        float reach = 0f;
         try
         {
-            float reach = BreedingRules.Reach(_found, Viewer, Tuning.ScanRadius);
+            reach = BreedingRules.Reach(_found, Viewer, Tuning.ScanRadius);
             if (reach > 0f)
             {
                 _characters.Clear();
@@ -94,6 +106,15 @@ internal sealed class EntityScanner
         catch (Exception error)
         {
             Fault("fish query failed", error);
+        }
+
+        try
+        {
+            MapEggs(transform.position, Tuning.ScanRadius + Math.Max(0f, reach));
+        }
+        catch (Exception error)
+        {
+            Fault("egg query failed", error);
         }
 
         try
@@ -181,6 +202,58 @@ internal sealed class EntityScanner
             catch (Exception error)
             {
                 Fault("could not read a fish", error);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Eggs have no static instance list, so this uses the recipe the game's own item
+    /// searches use: a sphere on the <c>item</c> layer, then the rigidbody's component.
+    /// Bounded by the radius, so it costs what a pen costs, not what the world costs.
+    /// The radius is the widened breeding reach; Build still cuts rows at the scan radius,
+    /// so the extra ring only feeds the crowd count.
+    /// An egg with several colliders is still one row. The collider buffer doubles when a
+    /// query fills it, up to 4096, so an item-littered base cannot hide an egg; beyond
+    /// 4096 the extras are dropped.
+    /// </summary>
+    private void MapEggs(Vector3 viewer, float radius)
+    {
+        if (s_itemMask == 0)
+        {
+            s_itemMask = LayerMask.GetMask("item");
+        }
+
+        int count = Physics.OverlapSphereNonAlloc(viewer, radius, _itemColliders, s_itemMask);
+        while (count == _itemColliders.Length && _itemColliders.Length < 4096)
+        {
+            Array.Resize(ref _itemColliders, _itemColliders.Length * 2);
+            count = Physics.OverlapSphereNonAlloc(viewer, radius, _itemColliders, s_itemMask);
+        }
+
+        _seenEggs.Clear();
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider? collider = _itemColliders[i];
+            _itemColliders[i] = null!;
+            try
+            {
+                Rigidbody? body = collider != null ? collider.attachedRigidbody : null;
+                EggGrow? egg = body != null ? body.GetComponent<EggGrow>() : null;
+                if (egg == null || !_seenEggs.Add(egg))
+                {
+                    continue;
+                }
+
+                NearbyEntity? entity = EntityMapper.FromEgg(egg);
+                if (entity != null)
+                {
+                    _found.Add(entity);
+                }
+            }
+            catch (Exception error)
+            {
+                Fault("could not read an egg", error);
             }
         }
     }

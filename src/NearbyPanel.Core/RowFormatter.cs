@@ -76,6 +76,11 @@ public static class RowFormatter
     /// </summary>
     public static string StatusText(NearbyEntity entity, ProgressFormat format = ProgressFormat.Percent)
     {
+        if (entity.Egg is { } egg)
+        {
+            return Eggs.Describe(egg, format);
+        }
+
         string status = entity.Status ?? string.Empty;
 
         if (entity.TamingProgress is { } taming)

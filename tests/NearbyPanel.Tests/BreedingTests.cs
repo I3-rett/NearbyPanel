@@ -76,6 +76,27 @@ public class BreedingTests
         Assert.Equal(3, Resolved(found, 0).Crowd);
     }
 
+    private static NearbyEntity Egg(string? prefab, float x) =>
+        new("Egg", EntityKind.Egg, new Vec3(x, 0f, 0f), 1, null, null, Prefab: prefab);
+
+    [Fact]
+    public void A_tagged_egg_of_the_offspring_prefab_raises_the_crowd()
+    {
+        // The game counts a non-AI offspring only when its prefab is tagged "spawned";
+        // the mapper hands over the prefab name exactly then.
+        List<NearbyEntity> found = new() { Animal(Boar, 0f, breeding: Rules()), Egg(Piglet, 4f) };
+
+        Assert.Equal(2, Resolved(found, 0).Crowd);
+    }
+
+    [Fact]
+    public void An_untagged_egg_stays_out_of_the_crowd()
+    {
+        List<NearbyEntity> found = new() { Animal(Boar, 0f, breeding: Rules()), Egg(null, 4f) };
+
+        Assert.Equal(1, Resolved(found, 0).Crowd);
+    }
+
     [Fact]
     public void Crowd_is_a_3D_sphere_so_a_parent_in_a_tower_escapes_it()
     {

@@ -17,7 +17,7 @@ internal static class FilterCommand
     {
         _ = new Terminal.ConsoleCommand(
             Name,
-            "filters the nearby list by name; `fish` shows only fish; no argument clears it",
+            "filters the nearby list by name; `fish` shows only fish, `egg` only eggs; no argument clears it",
             Run);
     }
 

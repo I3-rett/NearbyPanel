@@ -70,6 +70,11 @@
       <HintPath>$(ValheimManaged)\assembly_guiutils.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
+    <!-- Cover.GetCoverForPoint, the roof check EggGrow runs, is here. -->
+    <Reference Include="assembly_utils">
+      <HintPath>$(ValheimManaged)\assembly_utils.dll</HintPath>
+      <Private>False</Private><SpecificVersion>False</SpecificVersion>
+    </Reference>
     <!-- PlatformUserID, a parameter type of Minimap.AddPin. The compiler needs the
          assembly even though this mod never names the type. -->
     <Reference Include="Splatform">
@@ -86,6 +91,11 @@
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
       <HintPath>$(ValheimManaged)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private><SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <!-- Physics.OverlapSphereNonAlloc and Collider, used to find eggs. -->
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(ValheimManaged)\UnityEngine.PhysicsModule.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
     <!-- TextAnchor and FontStyle, used by the GUIStyle the panel builds. -->
