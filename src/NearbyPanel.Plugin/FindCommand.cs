@@ -75,7 +75,7 @@ internal static class FindCommand
             ConsoleOutput.Write(args, $"{Pins.Count} pin{(Pins.Count == 1 ? "" : "s")} on the map until you log out; `nearby_find` alone removes them");
         }
 
-        WriteSaddled(args, scanner, creatures);
+        WriteSaddled(args, scanner, creatures, headerShown: chests.Count > 0);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ internal static class FindCommand
         return rows;
     }
 
-    private static void WriteSaddled(Terminal.ConsoleEventArgs args, EntityScanner scanner, IReadOnlyList<NearbyEntity> creatures)
+    private static void WriteSaddled(Terminal.ConsoleEventArgs args, EntityScanner scanner, IReadOnlyList<NearbyEntity> creatures, bool headerShown)
     {
         bool any = false;
         foreach (NearbyEntity creature in creatures)
@@ -126,6 +126,11 @@ internal static class FindCommand
             if (!any)
             {
                 ConsoleOutput.Write(args, "saddled animals in range (the saddle is on them, not in a chest):");
+                if (!headerShown)
+                {
+                    ConsoleOutput.Write(args, RowFormatter.Header);
+                }
+
                 any = true;
             }
 
@@ -143,7 +148,19 @@ internal static class FindCommand
 
         // Icon3 is the plain dot. Named after the match so the map says what was found.
         Vector3 position = new(chest.Position.X, chest.Position.Y, chest.Position.Z);
-        Pins.Add(map.AddPin(position, Minimap.PinType.Icon3, chest.Status ?? Name, save: false, isChecked: false));
+        Pins.Add(map.AddPin(position, Minimap.PinType.Icon3, PinLabel(chest), save: false, isChecked: false));
+    }
+
+    /// <summary>A map pin is a marker, not an inventory: the first item names it, the row has the full list.</summary>
+    private static string PinLabel(NearbyEntity chest)
+    {
+        if (string.IsNullOrEmpty(chest.Status))
+        {
+            return Name;
+        }
+
+        int comma = chest.Status!.IndexOf(", ", StringComparison.Ordinal);
+        return comma < 0 ? chest.Status : chest.Status.Substring(0, comma);
     }
 
     private static void RemovePins()
