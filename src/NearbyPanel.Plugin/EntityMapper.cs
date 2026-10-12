@@ -103,6 +103,72 @@ internal static class EntityMapper
     }
 
     /// <summary>
+    /// An egg row, or null when the object is gone. Everything the game's own
+    /// <c>EggGrow.CanGrow</c> checks is re-read here, with the same calls and the same
+    /// thresholds, so the reason an egg is cold is the game's reason and not a guess.
+    /// The incubation stamp is in the ZDO (<c>GrowStart</c>, world seconds), written by
+    /// the owner; the clock it is measured against is shared, so the countdown is the
+    /// same on every client.
+    /// </summary>
+    public static NearbyEntity? FromEgg(EggGrow egg)
+    {
+        if (egg == null)
+        {
+            return null;
+        }
+
+        ItemDrop? drop = egg.GetComponent<ItemDrop>();
+        ItemDrop.ItemData? item = drop?.m_itemData;
+        Vector3 position = egg.transform.position;
+
+        float growStart = ZdoOf(egg)?.GetFloat(ZDOVars.s_growStart, 0f) ?? 0f;
+        bool warm = growStart > 0f;
+
+        float? progress = null;
+        float? secondsLeft = null;
+        if (warm && ZNet.instance != null && egg.m_growTime > 0f)
+        {
+            double now = ZNet.instance.GetTimeSeconds();
+            float elapsed = (float)(now - growStart);
+            progress = elapsed / egg.m_growTime;
+            secondsLeft = egg.m_growTime - elapsed;
+        }
+
+        bool hasFire = EffectArea.IsPointInsideArea(position, EffectArea.Type.Heat, 0.5f) != null;
+        Cover.GetCoverForPoint(position, out float cover, out bool underRoof, 0.1f);
+
+        var report = new EggReport(
+            Stack: item?.m_stack ?? 1,
+            Warm: warm,
+            Progress: progress,
+            SecondsLeft: secondsLeft,
+            NeedsFire: egg.m_requireNearbyFire,
+            HasFire: hasFire,
+            NeedsRoof: egg.m_requireUnderRoof,
+            UnderRoof: underRoof,
+            Cover: cover,
+            RequiredCover: egg.m_requireCoverPercentige);
+
+        string name = RichText.Strip(LocalizeOrEmpty(item?.m_shared?.m_name));
+
+        return new NearbyEntity(
+            Name: name.Length > 0 ? name : egg.gameObject.name,
+            Kind: EntityKind.Egg,
+            Position: ToVec3(position),
+            // The egg's quality is the level the hatchling gets (EggGrow.GrowUpdate:
+            // SetLevel(m_quality)), so a star here is the asksvin you will get.
+            Level: Math.Max(1, item?.m_quality ?? 1),
+            Status: null,
+            TamingProgress: null,
+            Awareness: Awareness.Calm,
+            Hostile: false,
+            TargetsYou: false,
+            Prefab: egg.gameObject.name,
+            Egg: report);
+    }
+
+
+    /// <summary>
     /// A container row for <c>nearby_find</c>, or null when nothing inside matches
     /// <paramref name="query"/>. Only the matching stacks go into STATUS: the point is
     /// to find one item, not to inventory the base.

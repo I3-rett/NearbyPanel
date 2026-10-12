@@ -704,4 +704,84 @@ public class GameApiGuardTests
 
         Assert.True(GameAssembly.NestedType("Minimap", "PinData").IsNestedPublic);
     }
+
+    // ----- eggs: EntityMapper.FromEgg / EntityScanner.MapEggs ---------------
+
+    [Fact]
+    public void EggGrow_is_public_with_the_incubation_fields()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition egg = GameAssembly.Type("EggGrow");
+        Assert.True(egg.IsPublic);
+        Assert.Equal("Single", egg.Fields.Single(f => f.Name == "m_growTime").FieldType.Name);
+        Assert.Equal("Boolean", egg.Fields.Single(f => f.Name == "m_requireNearbyFire").FieldType.Name);
+        Assert.Equal("Boolean", egg.Fields.Single(f => f.Name == "m_requireUnderRoof").FieldType.Name);
+        Assert.Equal("Single", egg.Fields.Single(f => f.Name == "m_requireCoverPercentige").FieldType.Name);
+        Assert.All(new[] { "m_growTime", "m_requireNearbyFire", "m_requireUnderRoof", "m_requireCoverPercentige" },
+            name => Assert.True(egg.Fields.Single(f => f.Name == name).IsPublic));
+    }
+
+    [Fact]
+    public void ZDOVars_s_growStart_is_a_public_static_int()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        FieldDefinition hash = GameAssembly.Field("ZDOVars", "s_growStart");
+        Assert.True(hash.IsPublic);
+        Assert.True(hash.IsStatic);
+        Assert.Equal("Int32", hash.FieldType.Name);
+    }
+
+    [Fact]
+    public void ZNet_GetTimeSeconds_is_the_clock_GrowStart_is_stamped_with()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition clock = GameAssembly.Method("ZNet", "GetTimeSeconds");
+        Assert.True(clock.IsPublic);
+        Assert.Equal("Double", clock.ReturnType.Name);
+    }
+
+    [Fact]
+    public void EffectArea_IsPointInsideArea_is_public_static_and_Type_has_Heat()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition query = GameAssembly.Method("EffectArea", "IsPointInsideArea", "Vector3", "Type", "Single");
+        Assert.True(query.IsPublic);
+        Assert.True(query.IsStatic);
+
+        TypeDefinition type = GameAssembly.NestedType("EffectArea", "Type");
+        Assert.True(type.IsNestedPublic);
+        Assert.True(type.IsEnum);
+        Assert.Contains(type.Fields, f => f.Name == "Heat");
+    }
+
+    [Fact]
+    public void Cover_GetCoverForPoint_is_public_static_in_assembly_utils()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // The roof check the game's own EggGrow.CanGrow runs. It lives in assembly_utils,
+        // which is why GameAssembly reads that file too.
+        MethodDefinition cover = GameAssembly.Method("Cover", "GetCoverForPoint", "Vector3", "Single&", "Boolean&", "Single");
+        Assert.True(cover.IsPublic);
+        Assert.True(cover.IsStatic);
+    }
 }

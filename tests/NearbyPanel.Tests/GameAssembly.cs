@@ -32,6 +32,8 @@ internal static class GameAssembly
     {
         "assembly_valheim.dll",
         "assembly_guiutils.dll",
+        // Cover.GetCoverForPoint, the roof check EggGrow runs, lives here.
+        "assembly_utils.dll",
     };
 
     private static readonly Lazy<List<AssemblyDefinition>> Loaded = new(Load);
