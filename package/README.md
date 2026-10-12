@@ -42,16 +42,15 @@ game.
 
 ## Scope
 
-It lists every creature within 50 m, which means it shows you things through trees and fog
-that you could not see yourself. Decide whether that suits the people you play with. Fish
-count too: they show their size in the ★ column and, under STATUS, the baits the species
-bites on. `nearby_find <text>` lists the chests within the same 50 m holding that item,
-nearest first, and pins them on the map until you log out; it reads the chest contents the
-game already sent your client and never opens anything. That reach includes chests you
-could not open yourself: another player's private chest, a chest inside a ward you have
-no access to, and a dungeon or treasure chest nobody has opened yet, since the game fills
-those in and replicates their contents the moment the zone loads. Decide whether that
-suits the people you play with.
+It lists every creature within 50 m, which means it shows you things through trees and
+fog that you could not see yourself. Fish count too: they show their size in the ★
+column and, under STATUS, the baits the species bites on. `nearby_find <text>` lists the
+chests within the same 50 m holding that item, nearest first, and pins them on the map
+until you log out; it reads the chest contents the game already sent your client and
+never opens anything. That reach includes chests you could not open yourself: another
+player's private chest, a chest inside a ward you have no access to, and a dungeon or
+treasure chest nobody has opened yet, since the game fills those in and replicates their
+contents the moment the zone loads. Decide whether that suits the people you play with.
 
 Two limits are fixed in the source rather than left as settings: the **50 m radius**,
 because reach is what separates this from surveillance and a limit you can slide is not a
