@@ -205,6 +205,7 @@ public sealed class Plugin : BaseUnityPlugin
         // own static table, so this is safe to do before any world is loaded.
         DumpCommand.Register(_scanner);
         FilterCommand.Register();
+        FindCommand.Register(_scanner);
 
         Log.LogInfo(PluginInfo.Name + " " + PluginInfo.Version + " loaded (client-side only).");
     }

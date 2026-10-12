@@ -33,6 +33,8 @@ that does not have it.** Players without the mod are unaffected and see nothing 
 - Filter the list by name with `nearby_filter boar`, show only fish with `nearby_filter fish`,
   or clear it with `nearby_filter`
 - `nearby_dump` writes the current list to the log, which is useful in a bug report
+- `nearby_find saddle` lists the chests within 50 m holding a saddle, pins them on the map
+  until you log out, and names any saddled animal in range
 - Other players are never listed
 
 The panel takes no clicks and never touches your cursor, so it cannot interfere with the
@@ -41,9 +43,14 @@ game.
 ## Scope
 
 It lists every creature within 50 m, which means it shows you things through trees and
-fog that you could not see yourself. Decide whether that suits the people you play with.
-Fish count too: they show their size in the ★ column and, under STATUS, the baits the
-species bites on.
+fog that you could not see yourself. Fish count too: they show their size in the ★
+column and, under STATUS, the baits the species bites on. `nearby_find <text>` lists the
+chests within the same 50 m holding that item, nearest first, and pins them on the map
+until you log out; it reads the chest contents the game already sent your client and
+never opens anything. That reach includes chests you could not open yourself: another
+player's private chest, a chest inside a ward you have no access to, and a dungeon or
+treasure chest nobody has opened yet, since the game fills those in and replicates their
+contents the moment the zone loads. Decide whether that suits the people you play with.
 
 Two limits are fixed in the source rather than left as settings: the **50 m radius**,
 because reach is what separates this from surveillance and a limit you can slide is not a
@@ -59,9 +66,9 @@ direction format.
 
 ## Console commands
 
-Both need Valheim's console, which is off by default: enable it in the game's settings, or
-add `-console` to the launch parameters (r2modman: **Settings → Launch parameters**). Then
-press **F5** in game.
+All three need Valheim's console, which is off by default: enable it in the game's
+settings, or add `-console` to the launch parameters (r2modman: **Settings → Launch
+parameters**). Then press **F5** in game.
 
 - `nearby_filter <text>` shows only creatures whose name contains the text, e.g.
   `nearby_filter lox`; `nearby_filter fish` shows only fish. With no argument it clears
@@ -71,8 +78,11 @@ press **F5** in game.
   counted: its ranges, and every animal considered with its 3-D and ground distance, height
   and whether it is ready to mate. That is the place to look when a pen reads `Crowded` or
   `No partner` and you cannot see why.
+- `nearby_find <text>` — chests within 50 m holding an item whose name contains the text,
+  with the same DIST / DIR / ALT columns as the panel, one temporary map pin each, and any
+  saddled animal in range. `nearby_find` alone removes the pins.
 
-Neither marks your character as having used cheats. When reporting a bug, attach
+None of them marks your character as having used cheats. When reporting a bug, attach
 `LogOutput.log` with a `nearby_dump` taken at the moment it happened.
 
 ## Compatibility

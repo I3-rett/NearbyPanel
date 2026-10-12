@@ -40,6 +40,17 @@ bait prefab name matches and a random roll beats the chance. Size is
 its ZDO (`SetVisible(HasOwner())`), so this mod reads the position regardless and never
 claims ownership.
 
+**Container** — a chest, wagon or ship hold. Its contents live in the ZDO (`items`) and
+every client's `Container` reloads them once a second (`InvokeRepeating("CheckForChanges")`
+in `Awake`, not owner-gated), so `GetInventory()` is readable anywhere without opening the
+chest; `m_privacy` only gates opening. `nearby_find` reads that and nothing else.
+
+**Map pin** — `Minimap.AddPin(..., save: false, ...)` appends to the local pin list only:
+no ZDO, no RPC, not saved, gone at logout. The one UI write this mod makes. If the player
+had hidden that icon type in the map's filter row, AddPin switches it back on (local UI
+state, with the game's own click feedback) — the one visible side effect beyond the pin
+itself.
+
 **Tameable** — the taming and pet component. Progress is `1 - s_tameTimeLeft /
 m_tamingTime`. The timer only advances while the creature has eaten (`!IsHungry()`) and
 is not alerted (`!IsAlerted()`), and the owner writes it once every 3 s.

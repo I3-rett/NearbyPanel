@@ -43,6 +43,7 @@ namespace NearbyPanel.Core;
 /// True when a player has named it, so <paramref name="Name"/> is that name rather
 /// than the species. Named animals are the ones people come looking for.
 /// </param>
+/// <param name="Saddled">True when a saddle is on the animal (the game's HaveSaddle ZDO flag). A saddle is the one item that lives on a creature rather than in a chest.</param>
 public sealed record NearbyEntity(
     string Name,
     EntityKind Kind,
@@ -59,4 +60,5 @@ public sealed record NearbyEntity(
     float? GrowthSecondsLeft = null,
     string? Prefab = null,
     bool ReadyToMate = true,
-    Breeding? Breeding = null);
+    Breeding? Breeding = null,
+    bool Saddled = false);

@@ -37,18 +37,18 @@ internal static class DumpCommand
 
         if (rows.Count == 0)
         {
-            Write(args, Player.m_localPlayer == null
+            ConsoleOutput.Write(args, Player.m_localPlayer == null
                 ? "no local player yet"
                 : $"nothing within {scope}");
             return;
         }
 
-        Write(args, $"{rows.Count} within {scope}");
-        Write(args, RowFormatter.Header);
+        ConsoleOutput.Write(args, $"{rows.Count} within {scope}");
+        ConsoleOutput.Write(args, RowFormatter.Header);
 
         foreach (NearbyEntity entity in rows)
         {
-            Write(args, RowFormatter.Row(entity, scanner.Viewer, scanner.Forward, Plugin.DirectionFormat, Plugin.ProgressFormat));
+            ConsoleOutput.Write(args, RowFormatter.Row(entity, scanner.Viewer, scanner.Forward, Plugin.DirectionFormat, Plugin.ProgressFormat));
 
             if (entity.Breeding is { } breeding)
             {
@@ -67,7 +67,7 @@ internal static class DumpCommand
         Breeding breeding,
         IReadOnlyList<NearbyEntity> found)
     {
-        Write(args, $"    {self.Prefab}: offspring {breeding.OffspringPrefab}, partner {breeding.PartnerPrefab}, "
+        ConsoleOutput.Write(args, $"    {self.Prefab}: offspring {breeding.OffspringPrefab}, partner {breeding.PartnerPrefab}, "
             + $"crowd {breeding.Crowd}/{breeding.MaxCrowd} in {breeding.CrowdRange:0.#} m, "
             + $"partners {breeding.Partners} in {breeding.PartnerRange:0.#} m, love {breeding.LovePoints}/{breeding.RequiredLovePoints}");
 
@@ -85,20 +85,8 @@ internal static class DumpCommand
             }
 
             string counted = distance <= breeding.CrowdRange ? "crowd" : "-";
-            Write(args, $"      {other.Name} {other.Prefab} 3d {distance:0.0} ground {Geometry.GroundDistance(self.Position, other.Position):0.0} "
+            ConsoleOutput.Write(args, $"      {other.Name} {other.Prefab} 3d {distance:0.0} ground {Geometry.GroundDistance(self.Position, other.Position):0.0} "
                 + $"dy {other.Position.Y - self.Position.Y:+0.0;-0.0} ready {other.ReadyToMate} {counted}");
         }
-    }
-
-    private static void Write(Terminal.ConsoleEventArgs args, string line)
-    {
-        // Terminal is a MonoBehaviour, so this needs Unity's null check rather than
-        // ?., which would happily call into a destroyed object.
-        if (args.Context != null)
-        {
-            args.Context.AddString(line);
-        }
-
-        Plugin.Log.LogInfo(line);
     }
 }

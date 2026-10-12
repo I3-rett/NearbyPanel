@@ -334,6 +334,21 @@ public class GameApiGuardTests
     }
 
     [Fact]
+    public void ZDO_GetBool_takes_a_hash_and_a_default()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // SaddledOf reads the HaveSaddle flag through it.
+        MethodDefinition method = GameAssembly.Method("ZDO", "GetBool", "Int32", "Boolean");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("Boolean", method.ReturnType.Name);
+    }
+
+    [Fact]
     public void Procreation_ReadyForProcreation_is_a_public_pure_read()
     {
         // Called on every breeding animal in range. In 1.0.16 it only reads: IsTamed
@@ -546,5 +561,147 @@ public class GameApiGuardTests
         Assert.True(shared.IsNestedPublic);
         Assert.True(name.IsPublic);
         Assert.Equal("String", name.FieldType.Name);
+    }
+
+    // ----- containers: EntityMapper.FromContainer / FindCommand ------------
+
+    [Fact]
+    public void Container_m_name_is_a_public_string_field()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // Read instead of GetHoverName(): same value, and a field cannot grow a write.
+        FieldDefinition name = GameAssembly.Field("Container", "m_name");
+        Assert.True(name.IsPublic);
+        Assert.Equal("String", name.FieldType.Name);
+    }
+
+    [Fact]
+    public void Container_GetInventory_is_public_and_returns_Inventory()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Container", "GetInventory");
+        Assert.True(method.IsPublic);
+        Assert.Equal("Inventory", method.ReturnType.Name);
+    }
+
+    [Fact]
+    public void Inventory_GetAllItems_is_public_and_returns_a_list()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition method = GameAssembly.Method("Inventory", "GetAllItems");
+        Assert.True(method.IsPublic);
+        Assert.Equal("List`1", method.ReturnType.Name);
+    }
+
+    [Fact]
+    public void ItemDrop_ItemData_exposes_stack_and_drop_prefab()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition data = GameAssembly.NestedType("ItemDrop", "ItemData");
+        FieldDefinition stack = data.Fields.Single(f => f.Name == "m_stack");
+        FieldDefinition prefab = data.Fields.Single(f => f.Name == "m_dropPrefab");
+
+        Assert.True(stack.IsPublic);
+        Assert.Equal("Int32", stack.FieldType.Name);
+        Assert.True(prefab.IsPublic);
+        Assert.Equal("GameObject", prefab.FieldType.Name);
+    }
+
+    [Fact]
+    public void ZDOVars_s_haveSaddleHash_is_a_public_static_int()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // Tameable.HaveSaddle() is private; the ZDO flag it reads is the public path.
+        FieldDefinition hash = GameAssembly.Field("ZDOVars", "s_haveSaddleHash");
+        Assert.True(hash.IsPublic);
+        Assert.True(hash.IsStatic);
+        Assert.Equal("Int32", hash.FieldType.Name);
+    }
+
+    // ----- map pins: FindCommand -------------------------------------------
+
+    [Fact]
+    public void Minimap_instance_is_a_public_static_property()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        PropertyDefinition instance = GameAssembly.Type("Minimap").Properties.Single(p => p.Name == "instance");
+        Assert.True(instance.GetMethod.IsPublic);
+        Assert.True(instance.GetMethod.IsStatic);
+    }
+
+    [Fact]
+    public void Minimap_AddPin_and_RemovePin_are_public()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        MethodDefinition add = GameAssembly.Method(
+            "Minimap", "AddPin", "Vector3", "PinType", "String", "Boolean", "Boolean", "Int64", "PlatformUserID");
+        MethodDefinition remove = GameAssembly.Method("Minimap", "RemovePin", "PinData");
+
+        Assert.True(add.IsPublic);
+        Assert.Equal("PinData", add.ReturnType.Name);
+
+        // The release build compiles against build/Splatform.Stub, so the DLL binds to
+        // exactly [Splatform]Splatform.PlatformUserID. If the game moves the type, this
+        // must go red before a player sees a MissingMethodException.
+        TypeReference author = add.Parameters[6].ParameterType;
+        Assert.Equal("PlatformUserID", author.Name);
+        Assert.Equal("Splatform", author.Namespace);
+        Assert.Equal("Splatform", author.Scope.Name.Replace(".dll", string.Empty));
+        Assert.True(author.IsValueType);
+
+        Assert.True(remove.IsPublic);
+    }
+
+    [Fact]
+    public void Minimap_PinType_is_a_public_enum_with_Icon3()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        TypeDefinition pinType = GameAssembly.NestedType("Minimap", "PinType");
+        Assert.True(pinType.IsNestedPublic);
+        Assert.True(pinType.IsEnum);
+        Assert.Contains(pinType.Fields, f => f.Name == "Icon3");
+    }
+
+    [Fact]
+    public void Minimap_PinData_is_a_public_nested_class()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        Assert.True(GameAssembly.NestedType("Minimap", "PinData").IsNestedPublic);
     }
 }
