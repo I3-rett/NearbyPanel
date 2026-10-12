@@ -33,6 +33,8 @@ that does not have it.** Players without the mod are unaffected and see nothing 
 - Filter the list by name with `nearby_filter boar`, show only fish with `nearby_filter fish`,
   or clear it with `nearby_filter`
 - `nearby_dump` writes the current list to the log, which is useful in a bug report
+- `nearby_find saddle` lists the chests within 50 m holding a saddle, pins them on the map
+  until you log out, and names any saddled animal in range
 - Other players are never listed
 
 The panel takes no clicks and never touches your cursor, so it cannot interfere with the
