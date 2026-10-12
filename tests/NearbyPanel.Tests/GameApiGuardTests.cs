@@ -334,6 +334,21 @@ public class GameApiGuardTests
     }
 
     [Fact]
+    public void ZDO_GetBool_takes_a_hash_and_a_default()
+    {
+        if (!GameAssembly.IsAvailable)
+        {
+            return;
+        }
+
+        // SaddledOf reads the HaveSaddle flag through it.
+        MethodDefinition method = GameAssembly.Method("ZDO", "GetBool", "Int32", "Boolean");
+
+        Assert.True(method.IsPublic);
+        Assert.Equal("Boolean", method.ReturnType.Name);
+    }
+
+    [Fact]
     public void Procreation_ReadyForProcreation_is_a_public_pure_read()
     {
         // Called on every breeding animal in range. In 1.0.16 it only reads: IsTamed
