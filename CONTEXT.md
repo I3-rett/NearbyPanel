@@ -40,6 +40,14 @@ bait prefab name matches and a random roll beats the chance. Size is
 its ZDO (`SetVisible(HasOwner())`), so this mod reads the position regardless and never
 claims ownership.
 
+**Egg** — an `ItemDrop` carrying `EggGrow`. The owner stamps `GrowStart` (world seconds from
+`ZNet.GetTimeSeconds()`) into the ZDO when `CanGrow()` holds — stack of one, a `Heat`
+effect area within 0.5 m (`EffectArea.IsPointInsideArea`), and `Cover.GetCoverForPoint`
+reporting a roof with cover ≥ `m_requireCoverPercentige` (0.7) — and clears it when it stops
+holding. It hatches `m_growTime` seconds later at the egg's quality as level. The hover only
+says warm or cold; this mod re-runs the same three checks to say which one fails.
+`Cover` lives in `assembly_utils.dll`.
+
 **Container** — a chest, wagon or ship hold. Its contents live in the ZDO (`items`) and
 every client's `Container` reloads them once a second (`InvokeRepeating("CheckForChanges")`
 in `Awake`, not owner-gated), so `GetInventory()` is readable anywhere without opening the
