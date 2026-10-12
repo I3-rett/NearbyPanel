@@ -5,7 +5,7 @@
 - **Eggs.** Asksvin and chicken eggs appear in the list. ★ is the level of the animal that
   will hatch, and STATUS reads `warm · 62% · 18 min` (in your chosen progress format), or the
   reason it is cold: `no fire`, `no roof`, or `roof 45% < 70%`, from the same checks the
-  game runs. `nearby_filter egg` shows only eggs. Read-only as always.
+  game runs. `nearby_filter egg` shows only eggs. Read-only as always. Eggs on the floor count toward a hen's or asksvin's crowd exactly when the game counts them.
 
 ## 1.3.0
 

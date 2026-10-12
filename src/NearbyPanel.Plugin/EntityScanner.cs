@@ -80,9 +80,10 @@ internal sealed class EntityScanner
         // against its whole pen. How much wider comes from the animals themselves:
         // each species carries its own breeding ranges. Only the ring beyond the first
         // pass is read again, and Build still cuts the rows at ScanRadius.
+        float reach = 0f;
         try
         {
-            float reach = BreedingRules.Reach(_found, Viewer, Tuning.ScanRadius);
+            reach = BreedingRules.Reach(_found, Viewer, Tuning.ScanRadius);
             if (reach > 0f)
             {
                 _characters.Clear();
@@ -106,7 +107,7 @@ internal sealed class EntityScanner
 
         try
         {
-            MapEggs(transform.position);
+            MapEggs(transform.position, Tuning.ScanRadius + Math.Max(0f, reach));
         }
         catch (Exception error)
         {
@@ -206,17 +207,19 @@ internal sealed class EntityScanner
     /// Eggs have no static instance list, so this uses the recipe the game's own item
     /// searches use: a sphere on the <c>item</c> layer, then the rigidbody's component.
     /// Bounded by the radius, so it costs what a pen costs, not what the world costs.
+    /// The radius is the widened breeding reach; Build still cuts rows at the scan radius,
+    /// so the extra ring only feeds the crowd count.
     /// An egg with several colliders is still one row. The collider buffer is 256 long;
     /// an overflow silently drops the extra colliders, which is fine for a pen.
     /// </summary>
-    private void MapEggs(Vector3 viewer)
+    private void MapEggs(Vector3 viewer, float radius)
     {
         if (s_itemMask == 0)
         {
             s_itemMask = LayerMask.GetMask("item");
         }
 
-        int count = Physics.OverlapSphereNonAlloc(viewer, Tuning.ScanRadius, _itemColliders, s_itemMask);
+        int count = Physics.OverlapSphereNonAlloc(viewer, radius, _itemColliders, s_itemMask);
         _seenEggs.Clear();
 
         for (int i = 0; i < count; i++)

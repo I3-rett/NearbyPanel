@@ -163,7 +163,10 @@ internal static class EntityMapper
             Awareness: Awareness.Calm,
             Hostile: false,
             TargetsYou: false,
-            Prefab: egg.gameObject.name,
+            // The crowd loop matches rows on Prefab. The game's GetNrOfInstances counts a
+            // non-AI offspring only when its prefab is tagged "spawned", so an untagged egg
+            // must stay invisible to the crowd; null does that without a new field.
+            Prefab: egg.gameObject.CompareTag("spawned") ? egg.gameObject.name : null,
             Egg: report);
     }
 
