@@ -136,11 +136,23 @@ internal static class EntityMapper
             secondsLeft = egg.m_growTime - elapsed;
         }
 
-        bool hasFire = EffectArea.IsPointInsideArea(position, EffectArea.Type.Heat, 0.5f) != null;
-        Cover.GetCoverForPoint(position, out float cover, out bool underRoof, 0.1f);
+        int stack = item?.m_stack ?? 1;
+
+        // Fire, roof and cover are read only for a cold single egg: that is the only case
+        // whose text shows them, and Cover.GetCoverForPoint is 17 raycasts and a spherecast.
+        // Skipping them elsewhere changes nothing on screen, since Eggs.Describe never
+        // reads those fields for a warm or stacked egg.
+        bool hasFire = false;
+        bool underRoof = false;
+        float cover = 0f;
+        if (!warm && stack == 1)
+        {
+            hasFire = EffectArea.IsPointInsideArea(position, EffectArea.Type.Heat, 0.5f) != null;
+            Cover.GetCoverForPoint(position, out cover, out underRoof, 0.1f);
+        }
 
         var report = new EggReport(
-            Stack: item?.m_stack ?? 1,
+            Stack: stack,
             Warm: warm,
             Progress: progress,
             SecondsLeft: secondsLeft,
