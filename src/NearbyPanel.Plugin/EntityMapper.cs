@@ -121,6 +121,8 @@ internal static class EntityMapper
         ItemDrop.ItemData? item = drop?.m_itemData;
         Vector3 position = egg.transform.position;
 
+        // GrowStart is a 32-bit float of world seconds, the same precision the game uses,
+        // so the (float) cast below is deliberate.
         float growStart = ZdoOf(egg)?.GetFloat(ZDOVars.s_growStart, 0f) ?? 0f;
         bool warm = growStart > 0f;
 
@@ -169,7 +171,6 @@ internal static class EntityMapper
             Prefab: egg.gameObject.CompareTag("spawned") ? egg.gameObject.name : null,
             Egg: report);
     }
-
 
     /// <summary>
     /// A container row for <c>nearby_find</c>, or null when nothing inside matches

@@ -17,8 +17,11 @@ internal sealed class EntityScanner
     /// <summary>Eggs are items; this is the layer the game's own item searches use.</summary>
     private static int s_itemMask;
 
-    /// <summary>Reused across scans. 256 colliders is far beyond any pen; overflow just drops the extras.</summary>
-    private readonly Collider[] _itemColliders = new Collider[256];
+    /// <summary>
+    /// Reused across scans. The buffer doubles when a query fills it, up to 4096, so an
+    /// item-littered base cannot hide an egg; beyond 4096 the extras are dropped.
+    /// </summary>
+    private Collider[] _itemColliders = new Collider[256];
 
     private readonly HashSet<EggGrow> _seenEggs = new();
 
@@ -209,8 +212,9 @@ internal sealed class EntityScanner
     /// Bounded by the radius, so it costs what a pen costs, not what the world costs.
     /// The radius is the widened breeding reach; Build still cuts rows at the scan radius,
     /// so the extra ring only feeds the crowd count.
-    /// An egg with several colliders is still one row. The collider buffer is 256 long;
-    /// an overflow silently drops the extra colliders, which is fine for a pen.
+    /// An egg with several colliders is still one row. The collider buffer doubles when a
+    /// query fills it, up to 4096, so an item-littered base cannot hide an egg; beyond
+    /// 4096 the extras are dropped.
     /// </summary>
     private void MapEggs(Vector3 viewer, float radius)
     {
@@ -220,6 +224,12 @@ internal sealed class EntityScanner
         }
 
         int count = Physics.OverlapSphereNonAlloc(viewer, radius, _itemColliders, s_itemMask);
+        while (count == _itemColliders.Length && _itemColliders.Length < 4096)
+        {
+            Array.Resize(ref _itemColliders, _itemColliders.Length * 2);
+            count = Physics.OverlapSphereNonAlloc(viewer, radius, _itemColliders, s_itemMask);
+        }
+
         _seenEggs.Clear();
 
         for (int i = 0; i < count; i++)
