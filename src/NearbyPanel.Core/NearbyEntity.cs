@@ -44,6 +44,7 @@ namespace NearbyPanel.Core;
 /// than the species. Named animals are the ones people come looking for.
 /// </param>
 /// <param name="Saddled">True when a saddle is on the animal (the game's HaveSaddle ZDO flag). A saddle is the one item that lives on a creature rather than in a chest.</param>
+/// <param name="Egg">Incubation state for an egg; null for everything else. STATUS is built from it so the progress setting applies.</param>
 public sealed record NearbyEntity(
     string Name,
     EntityKind Kind,
@@ -61,4 +62,5 @@ public sealed record NearbyEntity(
     string? Prefab = null,
     bool ReadyToMate = true,
     Breeding? Breeding = null,
-    bool Saddled = false);
+    bool Saddled = false,
+    EggReport? Egg = null);

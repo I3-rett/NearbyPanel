@@ -114,4 +114,24 @@ public class TextFilterTests
     {
         Assert.False(NearbyList.MatchesText(Named("Boar"), "fish"));
     }
+
+    [Theory]
+    [InlineData("egg")]
+    [InlineData("EGG")]
+    public void The_egg_keyword_isolates_eggs_without_knowing_their_names(string filter)
+    {
+        Assert.True(NearbyList.MatchesText(Named("Asksvin egg", EntityKind.Egg), filter));
+    }
+
+    [Fact]
+    public void The_egg_keyword_does_not_match_a_creature()
+    {
+        Assert.False(NearbyList.MatchesText(Named("Boar"), "egg"));
+    }
+
+    [Fact]
+    public void The_egg_keyword_still_matches_a_tameable_by_name()
+    {
+        Assert.True(NearbyList.MatchesText(Named("Eggbert", EntityKind.Tameable), "egg"));
+    }
 }

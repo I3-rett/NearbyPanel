@@ -206,4 +206,18 @@ public class RowFormatterTests
         Assert.False(entity.Saddled);
         Assert.True((entity with { Saddled = true }).Saddled);
     }
+
+    [Fact]
+    public void An_egg_row_takes_its_status_from_the_report_and_the_level_as_stars()
+    {
+        var report = new EggReport(1, true, 0.5f, 60f, true, true, true, true, 1f, 0.7f);
+        var egg = new NearbyEntity("Asksvin egg", EntityKind.Egg, new Vec3(1f, 0f, 0f), 2, null, null, Egg: report);
+
+        RowCells cells = RowFormatter.Cells(egg, new Vec3(0f, 0f, 0f), new Vec3(0f, 0f, 1f), progress: ProgressFormat.Both);
+
+        Assert.Equal("warm · 50% · 1 min", cells.Status);
+        Assert.Equal("-", cells.Awareness);
+        Assert.False(cells.Threat);
+        Assert.NotEqual("", cells.Level);
+    }
 }
