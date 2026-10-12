@@ -14,6 +14,14 @@ internal sealed class EntityScanner
     private readonly List<Character> _characters = new();
     private readonly List<NearbyEntity> _found = new();
 
+    /// <summary>Eggs are items; this is the layer the game's own item searches use.</summary>
+    private static int s_itemMask;
+
+    /// <summary>Reused across scans. 256 colliders is far beyond any pen; overflow just drops the extras.</summary>
+    private readonly Collider[] _itemColliders = new Collider[256];
+
+    private readonly HashSet<EggGrow> _seenEggs = new();
+
     /// <summary>Where the player is, valid only after a successful scan.</summary>
     public Vec3 Viewer { get; private set; }
 
@@ -94,6 +102,15 @@ internal sealed class EntityScanner
         catch (Exception error)
         {
             Fault("fish query failed", error);
+        }
+
+        try
+        {
+            MapEggs(transform.position);
+        }
+        catch (Exception error)
+        {
+            Fault("egg query failed", error);
         }
 
         try
@@ -181,6 +198,49 @@ internal sealed class EntityScanner
             catch (Exception error)
             {
                 Fault("could not read a fish", error);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Eggs have no static instance list, so this uses the recipe the game's own item
+    /// searches use: a sphere on the <c>item</c> layer, then the rigidbody's component.
+    /// Bounded by the radius, so it costs what a pen costs, not what the world costs.
+    /// An egg with several colliders is still one row. The collider buffer is 256 long;
+    /// an overflow silently drops the extra colliders, which is fine for a pen.
+    /// </summary>
+    private void MapEggs(Vector3 viewer)
+    {
+        if (s_itemMask == 0)
+        {
+            s_itemMask = LayerMask.GetMask("item");
+        }
+
+        int count = Physics.OverlapSphereNonAlloc(viewer, Tuning.ScanRadius, _itemColliders, s_itemMask);
+        _seenEggs.Clear();
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider? collider = _itemColliders[i];
+            _itemColliders[i] = null!;
+            try
+            {
+                Rigidbody? body = collider != null ? collider.attachedRigidbody : null;
+                EggGrow? egg = body != null ? body.GetComponent<EggGrow>() : null;
+                if (egg == null || !_seenEggs.Add(egg))
+                {
+                    continue;
+                }
+
+                NearbyEntity? entity = EntityMapper.FromEgg(egg);
+                if (entity != null)
+                {
+                    _found.Add(entity);
+                }
+            }
+            catch (Exception error)
+            {
+                Fault("could not read an egg", error);
             }
         }
     }

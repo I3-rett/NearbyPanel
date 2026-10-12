@@ -93,6 +93,11 @@
       <HintPath>$(ValheimManaged)\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>False</Private><SpecificVersion>False</SpecificVersion>
     </Reference>
+    <!-- Physics.OverlapSphereNonAlloc and Collider, used to find eggs. -->
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(ValheimManaged)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private><SpecificVersion>False</SpecificVersion>
+    </Reference>
     <!-- TextAnchor and FontStyle, used by the GUIStyle the panel builds. -->
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>$(ValheimManaged)\UnityEngine.TextRenderingModule.dll</HintPath>
