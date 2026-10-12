@@ -13,6 +13,15 @@ public class EggsTests
         new(Stack: 1, Warm: false, Progress: null, SecondsLeft: null,
             NeedsFire: true, HasFire: hasFire, NeedsRoof: true, UnderRoof: underRoof, Cover: cover, RequiredCover: 0.7f);
 
+    [Theory]
+    [InlineData(0.7f)]
+    [InlineData(0.699f)]
+    public void The_required_cover_is_rounded_not_truncated(float required)
+    {
+        EggReport report = Cold(hasFire: true, underRoof: true, cover: 0.45f) with { RequiredCover = required };
+        Assert.EndsWith("< 70%", Eggs.Describe(report, ProgressFormat.Both));
+    }
+
     [Fact]
     public void A_stack_never_incubates()
     {

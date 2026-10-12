@@ -47,15 +47,18 @@ game.
 It lists every creature within 50 m, which means it shows you things through trees and fog
 that you could not see yourself. Fish count too: they show their size in the ★ column and,
 under STATUS, the baits the species bites on. Eggs count as well: ★ is the level of the
-animal that hatches, and STATUS says `warm · 62% · 18 min`, or why not — `cold: no fire`,
-`cold: no roof`, `cold: roof 45% < 70%` — read with the same checks the game runs, so the
-fix is in the text. `nearby_find <text>` lists the chests within the same 50 m holding
-that item, nearest first, and pins them on the map until you log out; it reads the chest
-contents the game already sent your client and never opens anything. That reach includes
-chests you could not open yourself: another player's private chest, a chest inside a ward
-you have no access to, and a dungeon or treasure chest nobody has opened yet, since the
-game fills those in and replicates their contents the moment the zone loads. Decide
-whether that suits the people you play with.
+animal that hatches, and STATUS says `warm · 62% · 18 min` (in your chosen progress
+format), or why not — `cold: no fire`, `cold: no roof`, `cold: roof 45% < 70%` — read with
+the same checks the game runs, so the fix is in the text. Warm or cold is what the game
+last decided, which it does every five to ten seconds, so a plain `cold` with no reason
+means the conditions are met and incubation is about to start; a stack of eggs reads
+`stacked ×2` and never incubates. `nearby_find <text>` lists the chests within the same 50
+m holding that item, nearest first, and pins them on the map until you log out; it reads
+the chest contents the game already sent your client and never opens anything. That reach
+includes chests you could not open yourself: another player's private chest, a chest
+inside a ward you have no access to, and a dungeon or treasure chest nobody has opened
+yet, since the game fills those in and replicates their contents the moment the zone
+loads. Decide whether that suits the people you play with.
 
 Two limits are fixed in the source rather than left as settings: the **50 m radius**,
 because reach is what separates this from surveillance and a limit you can slide is not a

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace NearbyPanel.Core;
 
@@ -63,7 +65,10 @@ public static class Eggs
             }
             else if (report.Cover < report.RequiredCover)
             {
-                reasons.Add("roof " + RowFormatter.Percent(report.Cover) + " < " + RowFormatter.Percent(report.RequiredCover));
+                // Truncation is right for a measurement and wrong for a threshold: 0.7f * 100
+                // can land on 69.999 on Mono and would read as 69%, so the threshold rounds.
+                string required = ((int)Math.Round(report.RequiredCover * 100f)).ToString(CultureInfo.InvariantCulture) + "%";
+                reasons.Add("roof " + RowFormatter.Percent(report.Cover) + " < " + required);
             }
         }
 

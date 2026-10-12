@@ -3,7 +3,7 @@
   "author": "I3_rett",
   "version_number": "1.4.0",
   "website_url": "https://github.com/I3-rett/NearbyPanel",
-  "description": "Lists the creatures and fish near you with distance, direction, taming and growth progress, and why an animal is or is not breeding. Client-side only.",
+  "description": "Lists the creatures, fish and eggs near you with distance, direction, taming and growth progress, and why an animal is or is not breeding. Client-side only.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2351"
   ]
