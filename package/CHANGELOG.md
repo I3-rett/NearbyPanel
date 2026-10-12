@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+
+- **`nearby_find`.** `nearby_find <item>` lists the chests within 50 m holding an item
+  whose name contains the text, nearest first with the panel's DIST / DIR / ALT columns,
+  and drops a temporary map pin on each (gone at logout; `nearby_find` alone removes
+  them). It also names any saddled animal in range. Read-only: chest contents come from
+  what the game already replicates to your client, no chest is opened or claimed.
+
 ## 1.2.0
 
 - **Fish.** Fish now appear in the list with the creatures, nearest first. Their size shows in
